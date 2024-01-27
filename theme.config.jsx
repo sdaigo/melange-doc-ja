@@ -1,5 +1,9 @@
 export default {
-  logo: <strong>Melange</strong>,
+  logo: (
+    <strong>
+      Melange <small>v2.2.0</small>
+    </strong>
+  ),
   project: {
     link: 'https://github.com/sdaigo/melange-doc-ja',
   },
