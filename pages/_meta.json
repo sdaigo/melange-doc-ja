@@ -7,16 +7,16 @@
     "title": "LEARN"
   },
 	"new-to-ocaml": "New to OCaml?",
-	"package-management": "Package Management",
-	"build-system": "Build System",
+	"package-management": "Package management",
+	"build-system": "Build system",
 	"communicate-with-javascript": "Communicate with JavaScript",
-	"how-to-guide": "How to Guide",
+	"how-to-guides": "How-to guides",
 	"melange-for-x-developers": "Melange for X Developers",
 	"-- Reference": {
     "type": "separator",
     "title": "REFERENCE"
   },
-	"api": "API",
+	"api_": "API",
 	"-- Try": {
     "type": "separator",
     "title": "TRY"
