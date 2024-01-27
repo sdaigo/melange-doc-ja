@@ -353,4 +353,5 @@ ES6 モジュールを生成するには、[`melange.emit` stanza](https://dune.
 
 拡張子を指定しない場合、結果の JavaScript ファイルは `.js` を使用します。
 異なる拡張子を指定するには、`(<module_systems> <extension>)`のペアを使います（例：`(module_systems (es6 mjs))`）。
-拡張子が異なる限り、同じフィールドで複数のモジュールシステムを使うことができます。例えば、`(module_systems commonjs (es6 mjs))` は、CommonJS と拡張子 `.js` を使った JavaScript ファイルと、ES6 と拡張子 `.mjs` を使った JavaScript ファイルのセットを生成します。
+拡張子が異なる限り、同じフィールドで複数のモジュールシステムを使うことができます。
+例えば、`(module_systems commonjs (es6 mjs))` は、CommonJS と拡張子 `.js` を使った JavaScript ファイルと、ES6 と拡張子 `.mjs` を使った JavaScript ファイルのセットを生成します。

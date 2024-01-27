@@ -1,3 +1,5 @@
+import { Tabs } from 'nextra/components'
+
 # Melange for X developers
 
 他の言語やプラットフォームに詳しい方は、Melange と他の言語やプラットフォームの比較セクションをご覧ください。
@@ -97,8 +99,8 @@ Reason では JSX をサポートしていて、ReasonReact のようなバイ�
 
 #### Blocks
 
-JavaScript:
-
+<Tabs items={["JavaScript", "Reason"]}>
+<Tabs.Tab>
 ```js
 const myFun = (x, y) => {
   const doubleX = x + x
@@ -106,7 +108,8 @@ const myFun = (x, y) => {
   return doubleX + doubleY
 }
 ```
-
+</Tabs.Tab>
+<Tabs.Tab>
 ```ocaml
 let myFun = (x, y) => {
   let doubleX = x + x;
@@ -114,6 +117,8 @@ let myFun = (x, y) => {
   doubleX + doubleY;
 }
 ```
+</Tabs.Tab>
+</Tabs>
 
 #### Currying
 
@@ -173,8 +178,8 @@ JavaScript も OCaml も currying をサポートしているが、OCaml の cur
 
 OCaml では、「シーケンス式」は`{}`で作成され、最後のステートメントで評価される。JavaScript では、これは即座に呼び出される関数式でシミュレートできます（関数本体は独自のローカルスコープを持つため）。
 
-JavaScript:
-
+<Tabs items={["JavaScript", "Reason"]}>
+<Tabs.Tab>
 ```js
 let res = (function () {
   const x = 23
@@ -182,9 +187,8 @@ let res = (function () {
   return x + y
 })()
 ```
-
-Reason:
-
+</Tabs.Tab>
+<Tabs.Tab>
 ```ocaml
 let res = {
   let x = 23;
@@ -192,6 +196,8 @@ let res = {
   x + y;
 };
 ```
+</Tabs.Tab>
+</Tabs>
 
 #### Comments
 

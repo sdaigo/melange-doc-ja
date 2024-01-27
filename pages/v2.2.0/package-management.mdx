@@ -1,0 +1,351 @@
+import { Tabs } from 'nextra/components'
+
+# Package management
+
+Melange は[npm レジストリ](https://www.npmjs.com/)と [opam リポジトリ](https://opam.ocaml.org/packages/)の両方からパッケージを利用できます。
+
+- Melange ライブラリとバインディング（コンパイル時の依存関係）については、[Getting Started](./getting-started) で説明するパッケージ管理の選択肢の 1 つを使用してください。このガイドでは、opam を使用していることを前提としています。
+- Melange バインディングが必要とする JavaScript パッケージ（実行時依存関係）については、[npm](https://docs.npmjs.com/cli/)（またはその[代替](https://npmtrends.com/@microsoft/rush-vs-bolt-vs-pnpm-vs-rush-vs-yarn)）を使用してください。
+
+opam と統合することで、Melange プロジェクトにネイティブツールチェーンを提供します。Opam は OCaml 言語用に設計されており、Melange プロジェクトが [PPX](https://ocaml.org/docs/metaprogramming)、コンパイラライブラリ、エディタ統合ソフトウェア、その他のツールにファーストクラスでアクセスできるようにします。
+
+以下のセクションでは、opam を使用してアプリケーションの依存関係を定義する方法と、opam リポジトリにパッケージを公開する方法について詳しく説明します。ただし、このドキュメントは網羅的なものではなく、Melange 開発者にとって最も重要だと思われる部分のみを取り上げています。opam についてさらに詳しく知りたい場合は、[opam のマニュアル](https://opam.ocaml.org/doc/Manual.html)や [FAQ ページ](https://opam.ocaml.org/doc/FAQ.html)を参照してください。
+
+## Melange 開発者のための opam
+
+Before diving into specifics about using opam, there are the two relevant
+differences between opam and npm that are worth mentioning.
+
+opam の具体的な使い方に入る前に、opam と npm の違いについて 2 つ触れておきます。
+
+**1. 各パッケージ 1 バージョン**
+
+任意の時点で、どの opam スイッチも、最大でひとつのバージョンのパッケージしかインストールできません。これはフラットな依存関係グラフとして知られており、いくつかのパッケージマネージャ（[Bower](https://bower.io/)のような）も同様のアプローチに従っています。
+
+フラットな依存関係グラフは、例えば、同じプロジェクトに[`reason-react`](https://github.com/reasonml/reason-react/)の 2 つのバージョンをインストールすることが不可能であることを意味します。これにより、うっかり 2 つのバージョンの依存関係をインストールしてしまった場合の頭痛の種を避けることができます。また、特に　 Melange にとっては、JavaScript バンドルの無駄を省き、ブラウザベースのアプリケーションのページロードを減らすのに役立ちます。
+
+一方、プロジェクトの依存関係をより新しいバージョンにアップグレードするのは、厄介な ことになるかもしれません。1 つのパッケージは 1 つのバージョンしかインストールできないという制約があるため、依存関係の制約の間で競合が発生する可能性が高くなります。opam が解決策を見つけられない場合、これらの競合は手動で解決する必要があります。一般的には、競合する依存関係を更新して、新しいバージョンの Melange や一時的な依存関係と互換性を持たせることになります。
+
+**2. コンパイル言語のソースベースパッケージマネージャ**
+
+opam はパッケージのソースコードだけを配布し、コンパイルの段階は、パッケージが取得された後、パッケージを消費するときに実行されるビルド段階に任せます。OCaml のようなコンパイル言語のパッケージマネージャとして、opam はこのビルドステップをファーストクラスでサポートしています。すべてのパッケージは、どのようにビルドすべきかを opam に伝える必要があり、その方法は、パッケージの`.opam`ファイル内の[`build`フィールド](https://opam.ocaml.org/doc/Manual.html#opamfield-build)を使用することです。これは npm の使用方法とは異なります。npm レジストリにあるほとんどの公開パッケージは、ビルドステップに依存していません。
+
+Melange はコンパイルの段階で OCaml パッケージ（PPX、リンター、インストルメンテーション、その他のビルド時パッケージのいずれか）に依存するため、OCaml プログラマーが慣れ親しんでいるネイティブツールチェインと統合されており、ライブラリ作者はビルド済みバージョンのパッケージを作成して配布する負担から解放されます。
+
+---
+
+それでは、Melange プロジェクトで opam を使用する際の最も一般的な操作を説明します。以下のガイドは、Louis ([@khady](https://github.com/Khady))による[npm/yarn ユーザーのための素晴らしい opam ガイド](http://ocamlverse.net/content/opam_npm.html))に基づいています。
+
+### 初期設定
+
+まず最初にすべきことは、opam をインストールすることです。インストールに関する[公式ドキュメントのページ](https://opam.ocaml.org/doc/Install.html)があります。ほとんどの場合、パッケージ・マネージャーから入手できます。そうでない場合は、各プラットフォーム用のバイナリが提供されています。
+
+opam を使う前に必要な最初のステップ：
+
+```bash
+opam init -a
+```
+
+`opam init`コマンドのドキュメントにはこうあります：
+
+> init コマンドは、ローカルの「opam root」（デフォルトでは`~/.opam/`）を初期化し、opam のデータとパッケージを保持します。これは opam の通常の操作に必要なステップです。初期ソフトウェア・リポジトリが取得され、設定とオプションに従って初期「switch」をインストールすることもできます。これらはその後、opam switch と opam repository を使って設定することができます。
+
+> さらに、このコマンドは opam のシェル統合の一部をカスタマイズすることができます。
+
+興味深いのはこの部分です：
+
+- opam のルートは~/.opam にあります
+- opam はシェルの統合を使い、私たちの生活を楽にしてくれる
+- opam は switch という概念を使う
+
+switch は、npm の世界でいう`node_modules`フォルダに相当します。インストールされているすべてのパッケージが含まれています。local switch と global switch があります。同じように、プロジェクトにローカルな`node_modules`フォルダを持つことも、`yarn global`や`npm install -g`を使ってグローバルな依存関係をインストールすることもできます。global switch は便利な場合もありますが、混乱を避けるため、使わないことを推奨します。
+
+`opam init`を呼び出す際に`-a`オプションを省略すると、デフォルトの設定を変更できます。
+
+### 最低限の `app.opam` ファイル
+
+`package.json`に相当するのは`app.opam`ファイルで、`app`はパッケージ名です。同じディレクトリやプロジェクトに複数の `opam`ファイルを持つことができます。
+
+opam ファイルを操作する opam コマンドはありません。`npm init`や`yarn add`のようなコマンドは opam には存在しないため、`.opam`ファイルの更新は手作業で行う必要があります。
+
+最小限の`.opam`ファイルは以下のようになります：
+
+```text
+opam-version: "2.0"
+name: "my-app"
+authors: "Louis"
+homepage: "https://github.com/khady/example"
+maintainer: "ex@ample.com"
+dev-repo: "git+ssh://git@github.com:khady/example.git"
+bug-reports: "https://github.com/khady/example/issues"
+version: "0.1"
+build: [
+  [ "dune" "subst" ] {pinned}
+  [ "dune" "build" "-p" name "-j" jobs ]
+]
+depends: [
+  "dune" {build}
+]
+```
+
+`build:` プロジェクトのビルドにのみ `dune` が必要であることを opam に伝えます。
+
+### パッケージのインストール
+
+最初に必要なのは、現在のプロジェクト内の local switch です。switch がすでに存在するかどうかを確認するには、プロジェクトのルートに `_opam` ディレクトリを探すか、`opam switch` コマンドを使ってプロジェクト・フォルダにスイッチがすでに存在するかどうかを確認します。
+
+存在しない場合は、次のようにして作成します：
+
+```bash
+opam switch create . 5.1.1 --deps-only
+```
+
+もしそれが存在すれば、プロジェクトの依存関係をインストールすることができます：
+
+```bash
+opam install . --deps-only
+```
+
+### 新しいパッケージを追加する
+
+opam switch に新しいパッケージを追加するには、次のようにします：
+
+```bash
+opam install <package_name>
+```
+
+しかし、opam はインストール中に`app.opam`ファイルを変更しないので、`depends`フィールドにパッケージ名を追加して、手作業で行う必要があります。
+
+### 開発用パッケージのリンク
+
+これは `opam pin` で実現できます。例えば、パッケージを GitHub の特定のコミットにピン留めする場合です：
+
+```bash
+opam pin add reason-react.dev https://github.com/reasonml/reason-react.git#61bfbfaf8c971dec5152bce7e528d30552c70bc5
+```
+
+ブランチ名も使用できます：
+
+```bash
+opam pin add reason-react.dev https://github.com/reasonml/reason-react.git#feature
+```
+
+すでに opam リポジトリで公開されているパッケージの場合、最新バージョンに固定する近道は`--dev-repo`フラグを使うことです。
+
+```bash
+opam pin add melange.dev --dev-repo
+```
+
+任意のパッケージのピン止めを解除するには、 `opam unpin <パッケージ名>` または `opam pin remove <パッケージ名>` を使ってください。
+
+その他のオプションについては、[公式ドキュメント](https://opam.ocaml.org/doc/Usage.html#opam-pin)を参照してください。
+
+### パッケージのアップグレード
+
+opam は、Debian で`apt-get`が行うように、opam リポジトリのローカルコピーを保存します。そのため、アップグレードを行う前に、このコピーを更新しておくと良いでしょう：
+
+```bash
+opam update
+```
+
+そして、インストールされているパッケージを最新バージョンにアップグレードするには、次のように実行します：
+
+```bash
+opam upgrade <package_name>
+```
+
+`opam upgrade` は、パッケージ名が与えられていない場合、local switch の*全ての*パッケージをアップグレードすることもできます。
+
+### Dev dependencies
+
+[`with-dev-setup`フィールド](https://opam.ocaml.org/doc/Manual.html#pkgvar-with-dev-setup)を使って、開発時にのみ必要な依存関係を定義することができます。例えば：
+
+```text
+depends: [
+  "ocamlformat" {with-dev-setup}
+]
+```
+
+これは、依存関係をインストールする際に`--with-dev-setup`フラグと組み合わせる必要があります（例：`opam install --deps-only --with-dev-setup`）。
+
+### Lock ファイル
+
+Lock ファイルは、opam 世界ではあまり使われていませんが、次のように使うことができます：
+
+- `opam lock` を使用して、必要なときに Lock ファイルを生成する（基本的には `opam install` や `opam upgrade`の後に）
+- `opam install --deps-only` と `opam switch create .`コマンドのすべてに `--locked` を追加する
+
+### バインディングとパッケージ管理
+
+既存の JavaScript パッケージにバインドする Melange ライブラリを作成する場合、Melange ライブラリのユーザーは、それらの JavaScript パッケージがインストールされていることを確認する必要があります。
+
+これは、OCaml のシステムライブラリへのバインディングの仕組みと似ています。[`ocaml-mariadb`](https://github.com/andrenth/ocaml-mariadb/blob/9db2e4d8dec7c584213d0e0f03d079a36a35d9d5/README.md?plain=1#L18-L20)や[`ocurl`](https://github.com/ygrek/ocurl/blob/f0c6f47d6f3d25282648439dc4ade5810a993710/README.md?plain=1#L16)などの例を参照してください。
+
+このアプローチの利点は、JavaScript パッケージをバインディングの中で提供するのとは対照的に、バインディングのユーザーに、JavaScript パッケージのダウンロードやバンドル方法について完全な柔軟性を与えることです。
+
+Melange では、[check-npm-deps](https://github.com/jchavarri/opam-check-npm-deps) opam プラグインを使用して、opam パッケージから`opam`ファイル内の npm パッケージへの依存関係を定義する方法を提供しています。
+
+このプラグインを使用すると、ライブラリの作者は、opam `depexts`フィールド内に npm 形式の制約を含めることができます。例えば、`reason-react`の opam ファイルには、次のようなセクションを含めることができます：
+
+```text
+depexts: [
+  ["react" "react-dom"] {npm-version = "^17.0.0 || ^18.0.0"}
+]
+```
+
+これは`reason-react`のバージョンが ReactJS のバージョン 17 と 18 と互換性があることを示しています。
+
+Melange バインディングのユーザーは、`check-npm-deps`プラグインを使用することで、スイッチにインストールされた opam パッケージで定義された制約が、`node_modules`にインストールされたパッケージで満たされていることを確認できます。このためには、プラグインをインストールするだけで使用できます：
+
+```bash
+opam install opam-check-npm-deps
+```
+
+そして、opam switch と`node_modules`フォルダが存在するプロジェクトのルート・フォルダから呼び出します：
+
+```bash
+opam-check-npm-deps
+```
+
+## Melange 互換パッケージの検索と使用
+
+### opam packages
+
+Melange のパッケージは通常[opam]()で入手できます。パッケージ検索は opam CLI で `opam search <package-name>` （例： `opam search reason-react`） によって行えます。`opam install <パッケージ名>` を実行すると、opam パッケージをダウンロードしてビルドし、switch にインストールすることができます。opam は依存関係を自動的に`<your-project>.opam`ファイルに追加しないので、手動で追加する必要があることを覚えておいてください：
+
+```text
+...
+depends: [
+  ...
+  "reason-react" {>= "0.11.0"}
+]
+```
+
+インストールされたパッケージのライブラリを使用するには、`dune` ファイルの `libraries` フィールドにライブラリ名を追加します。例えば、プロジェクトの構成が以下のようになっている場合：
+
+<Tabs items={['OCaml', 'Reason']}>
+<Tabs.Tab>
+```text
+project_name/
+├── _opam
+├── src
+│   ├── dune
+│   ├── ReactComponent1.ml
+│   ├── ReactComponent2.ml
+│   └── lib
+│        ├── dune
+│        └── data.ml
+├── dune-project
+├── dune
+├── package.json
+└── ...
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```text
+project_name/
+├── _opam
+├── src
+│   ├── dune
+│   ├── ReactComponent1.re
+│   ├── ReactComponent2.re
+│   └── lib
+│        ├── dune
+│        └── data.re
+├── dune-project
+├── dune
+├── package.json
+└── ...
+```
+</Tabs.Tab>
+</Tabs>
+
+であれば、`reason-react`を`src`フォルダー下の`dune`ファイルに追加する必要があります：
+
+```clojure
+(melange.emit
+ (target output)
+ (alias react)
+ (libraries lib reason-react)
+ (preprocess
+  (pps reason-react-ppx))
+ (module_systems es6))
+```
+
+一部のライブラリは、付属のPPXで処理された後でないと動作しません、例えば、`reason-react`は`reason-react-ppx`による前処理を必要とします。
+これらの前処理は、同じパッケージの一部としてライブラリと一緒にインストールされることもあれば、
+別のパッケージの一部であることもあり、その場合は別々にインストールする必要があります。
+
+### 公開されていない opam パッケージ
+
+まだ公開されていない opam パッケージは、`opam pin` コマンドでインストールできます。
+例えば、 `opam pin add melange-fetch.dev git+https://github.com/melange-community/melange-fetch`
+とすると、`melange-fetch` が Git リポジトリから取得され、あなたのswitchにインストールされます。
+そうすると、`<your-project>.opam` ファイルが2カ所更新されるはずです：
+
+```text
+...
+depends: [
+  ...
+  "melange-fetch" {dev}
+]
+pin-depends: [
+  [ "melange-fetch.dev" "git+https://github.com/melange-community/melange-fetch" ]
+]
+```
+
+インストールが完了したら、パッケージに含まれているライブラリを `dune` ファイルに追加することができます：
+
+
+```text
+(melange.emit
+ (target output)
+ (alias react)
+ (libraries lib reason-react melange-fetch)
+ (preprocess
+  (pps reason-react-ppx))
+ (module_systems es6))
+```
+
+### npm packages
+
+Melange互換のパッケージはnpmに多数あります。
+npmには、`bs-json`のような、古いが今でも役に立つ互換性のあるBuckleScriptライブラリが多数あります。
+`npm install @glennsl/bs-json`を実行して依存関係をローカルに追加し、プロジェクトのルートにある`package.json`ファイルに記録します。
+
+Duneは新しくインストールされたパッケージを認識する必要があります。
+このような場合、[`subdir`](https://dune.readthedocs.io/en/stable/dune-files.html#subdir) stanza が便利です：
+
+```clojure
+(subdir
+ node_modules
+ (dirs @glennsl)
+ (subdir
+  @glennsl/bs-json/src
+  (library
+   (name bs_json)
+   (wrapped false)
+   (modes melange))))
+```
+
+`dune` ファイルに `(dirs :standard \ node_modules)` という行が含まれている場合、
+Dune が `node_modules` フォルダ下の新しい Melange ソースを処理できるように、この行を削除する必要があります。
+
+上記のプロジェクト構造では、`src/lib` フォルダーの下に `data.ml`（`data.re`） というファイルがあります。
+このフォルダで`bs-json`ライブラリを使用する場合、次のようになります。
+
+`data.re`ファイルから`bs-json`ライブラリを使いたい場合は、同じフォルダにある`dune`ファイル、つまり`src/lib/dune`にライブラリ名を追加する必要があります：
+
+```clojure
+(library
+ (name data)
+ (libraries bs_json)
+ (modes melange))
+```
+
+ライブラリ `bs-json` は `subdir` stanza で `bs_json` と定義され、`dune` ファイルでは `bs_json` として参照されていることに注意してください。
+これは、Dune でラップされたライブラリは、そのライブラリにちなんだ名前の[トップレベルモジュールしか公開しない](https://dune.readthedocs.io/en/stable/explanation/ocaml-ecosystem.html#dune-is-opinionated)ため、
+ライブラリ名が有効なモジュール名でなければならないためです。このため、「`-`」のような文字を含むライブラリ名は無効です。
+
+この方法で、利用したいパッケージごとに新しい`subdir` stanzaを追加することができます。
+複数の npm パッケージを使用する大規模な例については、この [`dune` ファイル](https://github.com/psb/reason-react-hn-melange/blob/9983b26aebd78b445d5f44d66bb6781eccedc787/dune)を参照してください。
