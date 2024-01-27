@@ -1,0 +1,356 @@
+import { Tabs } from 'nextra/components'
+
+# Build system
+
+Melange は、OCaml のビルドシステムとして最も広く使われている[Dune](https://dune.build/)と深く統合されています。この統合により、開発者は OCaml ネイティブ実行ファイルと Melange でビルドされたフロントエンド・アプリケーションの両方を含む単一のプロジェクトを作成し、両方のプラットフォーム間でコードを簡単に共有することができます。
+
+Dune は、プロジェクトのコンパイルに必要な作業を計画し、必要に応じてファイルをコピーし、Melange が OCaml ソースファイルを受け取って JavaScript コードに変換できるようにすべてを準備します。
+
+それでは、Melange のコンパイルモデルに飛び込み、Melange プロジェクトで Dune を使用する方法を簡単に説明します。
+
+### コンパイルモデル
+
+Melange は 1 つのソースファイルを 1 つの JavaScript モジュールにコンパイルします。このコンパイルモデルは、生成された JavaScript コードのデバッグを簡素化し、JavaScript プロジェクトで行うのと同じ方法で CSS ファイルやフォントなどのアセットをインポートすることを可能にします。また、[Webpack](https://webpack.js.org/)などの JavaScript モジュールバンドルラーや、[その他の代替ツール](https://npmtrends.com/@vercel/ncc-vs-esbuild-vs-parcel-vs-rollup)との統合も容易になります。
+
+Webpack との統合の例として、[Melange opam template](https://github.com/melange-re/melange-opam-template)を参照できます。[このリンク](https://github.com/melange-re/melange-opam-template/generate)からテンプレートに基づいてリポジトリを作成できます。
+
+### Melange はどのように Dune と統合されているか
+
+Dune は、Melange プロジェクトがライブラリやアプリケーションを指定するために使用する OCaml ビルドシステムです。monorepos に最適化されており、プロジェクトのメンテナンスが容易になります。このセクションでは、Dune の機能の概要と Melange アプリケーションのビルド方法について説明します。
+
+#### Features
+
+Dune は OCaml を念頭に設計されており、Melange 開発者にとって理想的なツールとなっています。以下のような利点があります：
+
+- ライブラリや実行ファイルの指定が簡単
+- monorepos に最適化：`npm link`や同様のソリューションは必要ありません
+- ライブラリのパスを更新することなく、フォルダの再配置ができるため、プロジェクトのメンテナンスが容易
+- Dune では、ソースからビルドすることで衛生が保たれています。すべてのコンパイル成果物は別の `_build` フォルダに置かれます。ユーザーはオプションで[ソースツリーにコピーする](https://dune.readthedocs.io/en/stable/dune-files.html#promote)ことができます
+- Dune は、[cram テスト](https://dune.readthedocs.io/en/stable/tests.html)、[Odoc](https://dune.readthedocs.io/en/stable/documentation.html)、Melange、[Js_of_ocaml](https://dune.readthedocs.io/en/stable/jsoo.html)との統合、[ウォッチモード](https://dune.readthedocs.io/en/stable/usage.html#watch-mode)、エディターサポートのための Merlin/LSP 統合、[クロスコンパイル](https://dune.readthedocs.io/en/stable/cross-compilation.html)、[opam ファイルの生成](https://dune.readthedocs.io/en/stable/howto/opam-file-generation.html)など、さまざまな追加機能を提供します
+
+#### 新規プロジェクトを作成する
+
+Dune の使い方を理解するために、小さな Melange アプリケーションを作ってみましょう。
+
+まず、[パッケージ管理のセクション](/package-management)で示したように、opam スイッチを作成します：
+
+```bash
+opam switch create . 5.1.1 --deps-only
+```
+
+Dune と Melange の最新バージョンを switch にインストールします：
+
+```bash
+opam update
+opam install dune melange
+```
+
+Reason 構文を使う場合は、`reason`パッケージもインストールします：
+
+```bash
+opam install reason
+```
+
+`dune-project`という名前のファイルを作成します。このファイルはプロジェクトの設定について Dune にいくつかのことを伝えます：
+
+```clojure
+(lang dune 3.8)
+
+(using melange 0.1)
+```
+
+最初の行`(lang dune 3.8)`は Dune に「Dune 言語」(dune ファイルで使用される言語)のバージョンを伝えます。Dune の Melange サポートはバージョン 3.8 からです。
+
+2 行目 `(using melange 0.1)` は Dune に、[Dune 言語の Melange 拡張](https://dune.readthedocs.io/en/stable/dune-files.html#using)を使いたいことを伝えます。
+
+#### ライブラリを追加する
+
+次に `lib`フォルダーを作成し、その中に `dune` ファイルを作成します。`dune`ファイルの中に以下の内容を記述します：
+
+```clojure
+(library
+ (name lib)
+ (modes melange))
+```
+
+同ディレクトリに`lib.ml`（Reason の場合は`lib.re`）ファイルを作成します：
+
+```ocaml
+let name = "Jane"
+```
+
+`dune`ファイルに現れる`library`のようなトップレベルのエントリーは *stanza*と呼ばれ、`name`や`modes`のような内部のものは stanza の*fields*と呼ばれます。
+
+すべての stanza は、Dune のドキュメントサイトでよくカバーされており、[library stanza](https://dune.readthedocs.io/en/stable/dune-files.html#library)にリファレンスがあります。
+
+Dune は、プロジェクトのフォルダー構造を変更する際の設定変更の必要性を最小限に抑えるように設計されています。例えば、`lib` フォルダーをプロジェクト内の別の場所に移動しても、`dune` ファイルを更新することなく、すべてのビルドコマンドが動作し続けます。この機能は非常に便利です。
+
+#### `melange.emit` によるエントリーポイント
+
+**ライブラリーは、アプリケーションの動作や論理コンポーネントをカプセル化するのに便利**ですが、それだけでは JavaScript の成果物を生成しません。
+
+JavaScript コードを生成するには、アプリケーションのエントリーポイントを定義する必要があります。ルートフォルダーに別の`dune`ファイルを作成します：
+
+```clojure
+(melange.emit
+ (target app)
+ (libraries lib))
+```
+
+そして`app.ml`（Reason の場合は`app.re`）ファイルを作ります：
+
+<Tabs items={['OCaml(app.ml)', 'Reason(app.re)']}>
+<Tabs.Tab>
+```ocaml
+let () = Js.log Lib.name
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```ocaml
+let () = Js.log(Lib.name);
+```
+</Tabs.Tab>
+</Tabs>
+
+`melange.emit` スタンザは Dune にライブラリとモジュールのセットから JavaScript ファイルを生成するよう指示します。このスタンザに関する詳しいドキュメントは [Dune docs](https://dune.readthedocs.io/en/stable/melange.html#melange-emit) を参照してください。
+
+アプリのファイル構造は以下のようになります：
+
+<Tabs items={["OCaml", "Reason"]}>
+<Tabs.Tab>
+```bash
+├── _opam
+├── lib
+│   ├── dune
+│   └── lib.ml
+├── dune-project
+├── dune
+└── app.ml
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+├── _opam
+├── lib
+│   ├── dune
+│   └── lib.re
+├── dune-project
+├── dune
+└── app.re
+```
+</Tabs.Tab>
+</Tabs>
+
+#### ビルド
+
+Melangeコンパイラーを使用して、ソースからJavaScriptコードを生成します：
+
+```bash
+dune build @melange
+```
+
+このコマンドは Dune に `melange` というエイリアスが付加されているターゲットをすべてビルドするように指示します。
+[エイリアス](https://dune.readthedocs.io/en/stable/overview.html#term-alias)は、ファイルを生成せず、設定可能な依存関係を持つビルドターゲットです。
+
+デフォルトでは、`melange.emit` stanza 内のすべてのターゲットと依存するライブラリが`melange`エイリアスにアタッチされます。後述するように、明示的にエイリアスを定義することもできます。
+
+すべてがうまくいけば、出来上がったJavaScriptをNode.jsで実行できるはずです。
+Duneの機能を説明したときに述べたように、Duneはすべての成果物を`_build`フォルダーの中に置き、ソース・フォルダーを汚さないようにしています。そのため、そのフォルダーに置かれたスクリプトをNodeに指し示し、期待される出力を確認します：
+
+```bash
+$ node _build/default/app/app.js
+Jane
+```
+
+#### JavaScript アーティファクトのレイアウト
+
+上のコマンドでは、`app`フォルダーの中にある`app.js`ファイルを探さなければなりませんでしたが、ソースにはそのようなフォルダーはありません。このフォルダは`melange.emit`stanzaの`target`フィールドで宣言されたもので、Duneは生成されたJavaScriptの成果物をどこに置くかを知るためにこれを使います。
+
+より複雑な例として、以下のセットアップを考えてみましょう：
+
+<Tabs items={["OCaml", "Reason"]}>
+<Tabs.Tab>
+```bash
+├── dune-project
+├── lib
+│   ├── dune
+│   └── foo.ml
+└── emit
+    └── dune
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+├── dune-project
+├── lib
+│   ├── dune
+│   └── foo.re
+└── emit
+    └── dune
+```
+</Tabs.Tab>
+</Tabs>
+
+`emit/dune`は以下のようになります：
+
+```clojure
+(melange.emit
+ (target app)
+ (libraries lib))
+```
+
+`lib/dune`：
+
+```clojure
+(library
+ (name lib)
+ (modes melange))
+```
+
+そして、`foo.ml`（`foo.re`）のJavaScriptの成果物は、以下に置かれます：
+
+```bash
+_build/default/emit/app/lib/foo.js
+```
+
+もっと一般的に言えば：
+
+- ワークスペースの相対パス `$melange-emit-folder` にある `dune` ファイルで定義された `melange.emit` stanza
+- `(target $target)` のように、`target` フィールド `$target` を含みます
+- 相対ワークスペース・パス `$path-to-source-file` に置かれた `$name.ml$name.ml`（`$name.ml$name.re`） というソース・ファイル
+
+`$name.ml`（`$name.re`）から生成されるJavaScriptファイルへのパスは以下のようになります：
+
+```text
+_build/default/$melange-emit-folder/$target/$path-to-source-file/$name.js
+```
+
+#### `melange.emit` のガイドライン
+
+`melange.emit` に関する以下の推奨事項は、大規模な産業プロジェクトでテストされ、複雑さ、メンテナンス、構築パフォーマンスに対処するための有用なガイドラインであることが証明されています。
+
+- Webpack などのツールから生成された JavaScript ファイルにアクセスしやすくするため、`melange.emit` stanza を含む `dune` ファイルをプロジェクトのルートフォルダに置くことを推奨します。これにより、生成された JavaScript ファイルが `_build/default/$target` パスの下に直接置かれるようになります
+- バンドルサイズが不用意に大きくなるリスクを最小にするために、`melange.emit` stanza の数を最小にすることをお勧めします。複数の `melange.emit` stanza を持つと、同じライブラリから生成されたJavaScriptコードが複数コピーされる可能性があります。`melange.emit` stanza をまとめることで、この問題を軽減し、より効率的なバンドルサイズを確保することができます
+
+#### エイリアスを使う
+
+デフォルトの `melange` エイリアスはプロトタイピングや小規模なプロジェクトでは便利ですが、
+大規模なプロジェクトでは複数のエントリーポイントや`melange.emit` stanza を定義することがあります。
+このような場合、個々の stanza をビルドする方法があると便利です。
+そのためには、`alias` フィールドを使うことで、それぞれに明示的なエイリアスを定義することができます。
+
+`melange.emit` stanza にカスタムエイリアス `my-app` を定義してみましょう：
+
+```clojure
+(melange.emit
+ (target app)
+ (alias my-app)
+ (libraries lib))
+```
+
+これで、この新しいエイリアスを参照できるようになりました：
+
+```bash
+$ dune build @my-app
+```
+
+デフォルトの `melange` エイリアスを使用して再度ビルドしようとすると、Dune はエラーを返します。
+
+```bash
+$ dune build @melange
+Error: Alias "melange" specified on the command line is empty.
+It is not defined in . or any of its descendants.
+```
+
+#### アセットを扱う
+
+Melange プロジェクトでは、CSS ファイルやフォントなどのアセットを使用することがあります。
+Dune の仕組み上、アセットを `_build` フォルダにコピーしてインストールする必要があります。
+この作業をできるだけ簡単にするため、Dune では stanza によって依存関係を指定する方法を用意しています：
+
+- `library` stanza の場合、 `melange.runtime_deps` フィールド
+- `melange.emit` stanza の場合、`runtime_deps` フィールド
+
+どちらのフィールドも Dune ドキュメントサイトの [Melange ページ](https://dune.readthedocs.io/en/stable/melange.html#melange-emit)に記載されています。
+
+Melange プロジェクトでアセットを扱う方法を学ぶために、テキストファイルから `Lib.name` の文字列を読み込むとします。
+`melange.runtime_deps` フィールドと Melange が提供する Node へのバインディングを組み合わせます。
+バインディングがどのように機能するかについては、次のセクション [JavaScript とのコミュニケーション]を参照してください。
+
+そこで、`lib` フォルダの中に、`Jane` という名前だけを含む新しいファイル `name.txt` を追加してみましょう。
+
+次に `lib/dune` ファイルを適合させます。
+環境変数 `__dirname` の値を取得するために、`melange.runtime_deps` フィールドと
+`bs.raw` 拡張子（これらの拡張子については「JavaScriptとのコミュニケーション」のセクションで詳しく説明します）を
+使用できるようにする [`processing`](https://dune.readthedocs.io/en/stable/reference/preprocessing-spec.html) フィールドを追加する必要があります：
+
+```clojure
+(library
+ (name lib)
+ (modes melange)
+ (melange.runtime_deps name.txt)
+ (preprocess (pps melange.ppx)))
+```
+
+最後に `lib/lib.ml`（`lib/lib.re`） を更新し、最近追加されたファイルから読み込むようにします：
+
+<Tabs items={["OCaml", "Reason"]}>
+<Tabs.Tab>
+```ocaml
+let dir = [%mel.raw "__dirname"]
+let file = "name.txt"
+let name = Node.Fs.readFileSync (dir ^ "/" ^ file) `ascii
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```ocaml
+let dir = [%mel.raw "__dirname"];
+let file = "name.txt";
+let name = Node.Fs.readFileSync(dir ++ "/" ++ file, `ascii);
+```
+</Tabs.Tab>
+</Tabs>
+
+これらの変更後、プロジェクトをビルドすると、Node でアプリケーション・ファイルを実行できるようになります：
+
+```bash
+$ dune build @my-app
+$ node _build/default/app/app.js
+Jane
+```
+
+同じ方法で、フォント、CSS、SVGファイル、その他プロジェクト内のあらゆるアセットをコピーすることができます。
+
+Dune は依存関係を非常に柔軟に指定できます。もうひとつの興味深い機能は globs で、複数のファイルに依存する場合の設定を簡略化できます。例えば：
+
+```clojure
+(melange.runtime_deps
+ (glob_files styles/*.css)
+ (glob_files images/*.png)
+ (glob_files static/*.{pdf,txt}))
+```
+
+詳しくは依存関係の仕様の[ドキュメント](https://dune.readthedocs.io/en/stable/concepts/dependency-spec.html)を参照してください。
+
+ランタイムの依存性については、Melange 開発者向けの Dune ガイドを終了しました。
+Dune の動作や Melange との統合についての詳細は、[Duneドキュメント](https://dune.readthedocs.io/)、[Melange opam template](https://github.com/melange-re/melange-opam-template)を参照してください。
+
+#### CommonJS または ES6 modules
+
+Melange は、宣言した関数をエクスポートし、依存する値やモジュールのインポートを宣言する JavaScript モジュールを作成します。
+
+デフォルトでは、Melange は [CommonJS](https://en.wikipedia.org/wiki/CommonJS) モジュールを生成しますが、[ES6](https://en.wikipedia.org/wiki/ECMAScript#6th_Edition_-_ECMAScript_2015) モジュールを生成するように設定することも可能です。
+
+ES6 モジュールを生成するには、[`melange.emit` stanza](https://dune.readthedocs.io/en/stable/melange.html#melange-emit) の `module_systems` フィールドを使用します：
+
+```clojure
+(melange.emit
+ (target app)
+ (alias my-app)
+ (libraries lib)
+ (module_systems es6))
+```
+
+拡張子を指定しない場合、結果の JavaScript ファイルは `.js` を使用します。
+異なる拡張子を指定するには、`(<module_systems> <extension>)`のペアを使います（例：`(module_systems (es6 mjs))`）。
+拡張子が異なる限り、同じフィールドで複数のモジュールシステムを使うことができます。例えば、`(module_systems commonjs (es6 mjs))` は、CommonJS と拡張子 `.js` を使った JavaScript ファイルと、ES6 と拡張子 `.mjs` を使った JavaScript ファイルのセットを生成します。
