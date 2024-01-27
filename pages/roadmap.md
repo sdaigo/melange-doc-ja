@@ -1,14 +1,11 @@
 # Roadmap
 
-This page contains:
+このページでは以下について示します：
 
-- a historical overview of Melange development
-- details of the Melange roadmap, offering a clear view into the current
-  priorities and features being worked on.
+- Melange 開発の歴史的概要
+- Melange のロードマップの詳細、現在の優先順位と取り組んでいる機能の明確なビュー
 
-Please note that the roadmap is a rough outline and is subject to change. We
-encourage you to provide feedback, suggestions, and feature requests through any
-of the [available communication channels](community.md).
+ロードマップは大まかな概要であり、変更される可能性があることにご留意ください。フィードバック、ご提案、機能リクエストは、[利用可能なコミュニケーションチャネル](/community)を通じてお寄せください。
 
 ## Q4 2023
 
