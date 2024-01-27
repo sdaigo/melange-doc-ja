@@ -1,25 +1,16 @@
-# Communicate with JavaScript
+# JavaScript とのコミュニケーション
 
-Melange interoperates very well with JavaScript, and provides a wide array of
-features to consume foreign JavaScript code. To learn about these techniques, we
-will first go through the language concepts that they build upon, then we will
-see how types in Melange map to JavaScript runtime types. Finally, we will
-provide a variety of use cases with examples to show how to communicate to and
-from JavaScript.
+Melange は JavaScript との相互運用性が非常に高く、外部の JavaScript コードを利用するための様々な機能を提供しています。これらのテクニックを学ぶために、まず言語コンセプトについて説明し、次に Melange の型が JavaScript のランタイム型にどのようにマッピングされるかを見ていきます。最後に、JavaScript とのコミュニケーション方法を示すために、さまざまな使用例を例として示します。
 
-## Language concepts
+## 言語のコンセプト
 
-The concepts covered in the following sections are a small subset of the OCaml
-language. However, they are essential for understanding how to communicate with
-JavaScript, and the features that Melange exposes to do so.
+以下のセクションで説明する概念は、OCaml 言語のごく一部です。しかし、JavaScript とのコミュニケーション方法と、そのために Melange が提供する機能を理解する上では不可欠です。
 
 ### Attributes and extension nodes
 
-In order to interact with JavaScript, Melange needs to extend the language to
-provide blocks that express these interactions.
+JavaScript と相互作用するために、Melange はこれらの相互作用を表現するブロックを提供するように言語を拡張する必要があります。
 
-One approach could be to introduce new syntactic constructs (keywords and such)
-to do so, for example:
+例えば、そのために新しい構文構造（キーワードなど）を導入するのも 1 つの方法です：
 
 ```text
 javascript add : int -> int -> int = {|function(x,y){
@@ -27,32 +18,20 @@ javascript add : int -> int -> int = {|function(x,y){
 }|}
 ```
 
-But this would break compatibility with OCaml, which is one of the main goals of
-Melange.
+しかし、これでは Melange の主な目標のひとつである OCaml との互換性が壊れてしまいます。
 
-Fortunately, OCaml provides mechanisms to extend its language without breaking
-compatibility with the parser or the language. These mechanisms are composed by
-two parts:
+幸いなことに、OCaml はパーサーや言語との互換性を壊すことなく言語を拡張するメカニズムを提供しています。これらのメカニズムは 2 つの部分で構成されています：
 
-- First, some syntax additions to define parts of the code that will be extended
-  or replaced
-- Second, compile-time OCaml native programs called [PPX
-  rewriters](https://ocaml.org/docs/metaprogramming), that will read the syntax
-  additions defined above and proceed to extend or replace them
+- 第 1 に、拡張または置換されるコード部分を定義するための構文追加
+- 第 2 に、[PPX リライター](https://ocaml.org/docs/metaprogramming)と呼ばれるコンパイル時の OCaml ネイティブ・プログラムで、上記で定義された構文追加を読み込み、拡張または置換を行います。
 
-The syntax additions come in two flavors, called [extension
-nodes](https://v2.ocaml.org/manual/extensionnodes.html) and
-[attributes](https://v2.ocaml.org/manual/attributes.html).
+構文追加には、[Extension nodes](https://v2.ocaml.org/manual/extensionnodes.html)と[attributes](https://v2.ocaml.org/manual/attributes.html)という 2 つの種類があります。
 
 #### Extension nodes
 
-Extension nodes are blocks that are supposed to be replaced by a specific type
-of PPX rewriters called extenders. Extension nodes use the `%` character to be
-identified. Extenders will take the extension node and replace it with a valid
-OCaml AST (abstract syntax tree).
+Extension nodes は、extender と呼ばれる特定のタイプの PPX リライターによって置き換えられることになっているブロックです。Extension nodes は、識別のために`%`文字を使用します。extender は Extension nodes を有効な OCaml AST（抽象構文木）に置き換えます。
 
-An example where Melange uses extension nodes to communicate with JavaScript is
-to produce "raw" JavaScript inside a Melange program:
+Melange が拡張ノードを使用して JavaScript とコミュニケーションする例として、Melange プログラム内で「生の」JavaScript を生成する方法があります：
 
 ```ocaml
 [%%mel.raw "var a = 1; var b = 2"]
@@ -64,7 +43,7 @@ let add = [%mel.raw "a + b"]
 let add = [%mel.raw "a + b"];
 ```
 
-Which will generate the following JavaScript code:
+これは、以下のような JavaScript コードを生成します：
 
 ```js
 var a = 1
@@ -72,31 +51,19 @@ var b = 2
 var add = a + b
 ```
 
-The difference between one and two percentage characters is detailed in the
-[OCaml documentation](https://v2.ocaml.org/manual/extensionnodes.html).
+パーセント 1 文字と 2 文字の違いについては、[OCaml のドキュメント](https://v2.ocaml.org/manual/extensionnodes.html)を参照してください。
 
 #### Attributes
 
-Attributes are "decorations" applied to specific parts of the code to provide
-additional information. In Melange, attributes are used in two ways to enhance
-the expressiveness of generating JavaScript code: either reusing existing OCaml
-built-in attributes or defining new ones.
+Attributes は、コードの特定の部分に追加情報を提供するために適用される「装飾」です。Melange では、JavaScript コード生成の表現力を高めるために、既存の OCaml 組み込み Attributes を再利用するか、新しい Attributes を定義するかの 2 つの方法で Attributes を使用します。
 
-##### Reusing OCaml attributes
+##### OCaml attributes の再利用
 
-The first approach is leveraging the existing [OCaml’s built-in
-attributes](https://v2.ocaml.org/manual/attributes.html#ss:builtin-attributes)
-to be used for JavaScript generation.
+最初のアプローチは、既存の[OCaml の組み込み attributes](https://v2.ocaml.org/manual/attributes.html#ss:builtin-attributes)を JavaScript の生成に活用することです。
 
-One prominent example of OCaml attributes that can be used in Melange projects
-is the `unboxed` attribute, which optimizes the compilation of single-field
-records and variants with a single tag to their raw values. This is useful when
-defining type aliases that we don’t want to mix up, or when binding to
-JavaScript code that uses heterogeneous collections. An example of the latter is
-discussed in the [variadic function arguments](#variadic-function-arguments)
-section.
+Melange プロジェクトで使用できる OCaml 属性の代表的な例として、`unboxed`属性があります。これは、シングルフィールドのレコードとバリアントを 1 つのタグでコンパイルし、生の値に最適化するものです。これは、混在させたくない型エイリアスを定義する場合や、異種コレクションを使用する JavaScript コードにバインドする場合に便利です。後者の例は [variadic 関数の引数](#variadic-function-arguments)のセクションで説明します。
 
-For instance:
+例えば：
 
 ```ocaml
 type name =
@@ -111,30 +78,21 @@ type name =
 let student_name = Name("alice");
 ```
 
-Compiles into:
+は、以下のようにコンパイルされます：
 
 ```js
 var student_name = 'alice'
 ```
 
-Other OCaml pre-built attributes like `alert` or `deprecated` can be used with
-Melange as well.
+`alert`や`deprecated`のような他の OCaml 組み込み attributes も Melange で使用できます。
 
-##### Defining new attributes
+##### 新しい attributes を定義する
 
-The second approach is introducing new attributes specifically designed for
-Melange, such as the [`mel.set` attribute](#bind-to-object-properties) used to
-bind to properties of JavaScript objects. The complete list of attributes
-introduced by Melange can be found
-[here](#list-of-attributes-and-extension-nodes).
+2 つ目のアプローチは、JavaScript オブジェクトのプロパティにバインドするために使用される[`mel.set`属性](#bind-to-object-properties)のような、Melange のために特別に設計された新しい属性を導入することです。Melange によって導入された属性の完全なリストは、[ここ](#list-of-attributes-and-extension-nodes)にあります。
 
-Attribute annotations can use one, two or three `@` characters depending on
-their placement in the code and which kind of syntax tree node they are
-annotating. More information about attributes can be found in the [dedicated
-OCaml manual page](https://v2.ocaml.org/manual/attributes.html).
+Attribute アノテーションは、コード内の配置と、どの種類のシンタックス・ツリー・ノードにアノテーションするかによって、1 文字、2 文字、または 3 文字の`@`を使用することができます。アトリビュートの詳細については、[OCaml のマニュアル・ページ](https://v2.ocaml.org/manual/attributes.html)を参照してください。
 
-Here are some samples using Melange attributes
-[`mel.set`](#bind-to-object-properties) and [`mel.as`](#using-ocaml-records):
+Melange の attribute である[`mel.set`](#bind-to-object-properties) と [`mel.as`](#using-ocaml-records) を使ったサンプルです：
 
 ```ocaml
 type document
@@ -158,18 +116,13 @@ type t = {
 };
 ```
 
-To learn more about preprocessors, attributes and extension nodes, check the
-[section about PPX
-rewriters](https://ocaml.org/docs/metaprogramming#ppx-rewriters) in the OCaml
-docs.
+プリプロセッサ、attributes、Extension nodes の詳細については、[OCaml ドキュメントの PPX リライタのセクション](https://ocaml.org/docs/metaprogramming#ppx-rewriters)を参照してください。
 
-### External functions
+### External 関数
 
-Most of the system that Melange exposes to communicate with JavaScript is built
-on top of an OCaml language construct called `external`.
+Melange が JavaScript と通信するために公開しているシステムのほとんどは、`external`と呼ばれる OCaml の構成要素の上に構築されています。
 
-`external` is a keyword for declaring a value in OCaml that will [interface with
-C code](https://v2.ocaml.org/manual/intfc.html):
+`external`は、OCaml で[C コードとのインターフェイス](https://v2.ocaml.org/manual/intfc.html)となる値を宣言するためのキーワードです：
 
 ```ocaml
 external my_c_function : int -> string = "someCFunctionName"
@@ -179,31 +132,17 @@ external my_c_function : int -> string = "someCFunctionName"
 external my_c_function: int => string = "someCFunctionName";
 ```
 
-It is like a `let` binding, except that the body of an external is a string.
-That string has a specific meaning depending on the context. For native OCaml,
-it usually refers to a C function with that name. For Melange, it refers to the
-functions or values that exist in the runtime JavaScript code, and will be used
-from Melange.
+これは`let`バインディングのようなものだが、external のボディが文字列である点が異なります。この文字列は文脈によって特定の意味を持つ。ネイティブの OCaml では、通常その名前の C 関数を指します。Melange の場合は、実行時の JavaScript コードに存在し、Melange から使用される関数または値を指します。
 
-In Melange, externals can be used to [bind to global JavaScript
-objects](#using-global-functions-or-values). They can also be decorated with
-certain `[@mel.xxx]` attributes to facilitate the creation of bindings in
-specific scenarios. Each one of the [available
-attributes](#list-of-attributes-and-extension-nodes) will be further explained
-in the next sections.
+Melange では、external を使用してグローバルな JavaScript オブジェクトにバインドすることができます。また、特定の`[@mel.xxx]`属性で装飾することで、特定のシナリオでのバインディングを容易にすることもできます。利用可能な属性については、次のセクションで詳しく説明します。
 
-Once declared, one can use an `external` as a normal value. Melange external
-functions are turned into the expected JavaScript values, inlined into their
-callers during compilation, and completely erased afterwards. They don’t appear
-in the JavaScript output, so there are no costs on bundling size.
+一度宣言すれば、`external`を通常の値として使用することができます。Melange の external 関数は期待される JavaScript の値に変換され、コンパイル時に呼び出し元にインライン化され、コンパイル後は完全に消去されます。JavaScript の出力には現れないので、バンドルサイズにコストはかかりません。
 
-**Note**: it is recommended to use external functions and the `[@mel.xxx]`
-attributes in the interface files as well, as this allows some optimizations
-where the resulting JavaScript values can be directly inlined at the call sites.
+**Note**: 外部関数と`[@mel.xxx]`属性をインターフェースファイルでも使用することをお勧めします。これにより、結果として得られる JavaScript の値を呼び出し先で直接インライン化することができ、いくつかの最適化が可能になるからです。
 
-#### Special identity external
+#### 特別な identity external
 
-One external worth mentioning is the following one:
+特筆すべき external には次のものがあります：
 
 ```ocaml
 type foo = string
@@ -217,14 +156,11 @@ type bar = int;
 external danger_zone: foo => bar = "%identity";
 ```
 
-This is a final escape hatch which does nothing but convert from the type `foo`
-to `bar`. In the following sections, if you ever fail to write an `external`,
-you can fall back to using this one. But try not to.
+これは、`foo`型を`bar`型に変換することだけを行う最後の脱出口です。以下のセクションで、もし external 関数を書くのに失敗したら、この関数を使うことに戻ることができますが、そうしないようにしましょう。
 
 ### Abstract types
 
-In the subsequent sections, you will come across examples of bindings where a
-type is defined without being assigned to a value. Here is an example:
+この後のセクションで、値が代入されずに型が定義されているバインディングの例に出会うでしょう。以下はその例です：
 
 ```ocaml
 type document
@@ -234,17 +170,9 @@ type document
 type document;
 ```
 
-These types are referred to as "abstract types" and are commonly used together
-with external functions that define operations over values when communicating
-with JavaScript.
+これらの型は「抽象型」と呼ばれ、JavaScript と通信する際に、値に対する操作を定義する external 関数とともに一般的に使用される。
 
-Abstract types enable defining types for specific values originating from
-JavaScript while omitting unnecessary details. An illustration is the `document`
-type mentioned earlier, which has several
-[properties](https://developer.mozilla.org/en-US/docs/Web/API/Document). By
-using abstract types, one can focus solely on the required aspects of the
-`document` value that the Melange program requires, rather than defining all its
-properties. Consider the following example:
+抽象型は、不要な詳細を省きつつ、JavaScript に由来する特定の値に対する型を定義することを可能にします。例えば、前述の `document` 型はいくつかのプロパティを持ちます。抽象型を使用することで、すべてのプロパティを定義するのではなく、Melange プログラムが必要とするドキュメント値の必要な部分のみに焦点を当てることができます。次の例を考えてみましょう：
 
 ```ocaml
 type document
@@ -260,35 +188,24 @@ external document: document = "document";
 [@mel.set] external set_title: (document, string) => unit = "title";
 ```
 
-Subsequent sections delve into the details about the
-[`mel.set`](#bind-to-object-properties) attribute and [how to bind to global
-values](#using-global-functions-or-values) like `document`.
+後続のセクションでは、[`mel.set`](#bind-to-object-properties)属性の詳細と、`document`のような[グローバルな値へのバインディング方法](#using-global-functions-or-values)について掘り下げます。
 
-For a comprehensive understanding of abstract types and their usefulness, refer
-to the "Encapsulation" section of the [OCaml Cornell
-textbook](https://cs3110.github.io/textbook/chapters/modules/encapsulation.html).
+抽象型とその有用性の包括的な理解については、[OCaml Cornell textbook](https://cs3110.github.io/textbook/chapters/modules/encapsulation.html)の「カプセル化」のセクションを参照してください。
 
 ### Pipe operators
 
-There are two pipe operators available in Melange:
+Melange には二つの pipe 演算子があります：
 
-- A _pipe last_ operator `|>`, available [in
-  OCaml](https://v2.ocaml.org/api/Stdlib.html#1_Compositionoperators) and
-  inherited in Melange
-- A _pipe first_ operator <code class="text-ocaml">\|.</code><code
-  class="text-reasonml">\-\></code>, available exclusively in Melange
+- _pipe last_ `|>`: [OCaml でサポート](https://v2.ocaml.org/api/Stdlib.html#1_Compositionoperators)され、Melange にも継承されています
+- _pipe first_ `|.`, `->`: Melange 独自のものです
 
-Let’s see the differences between the two.
+二つの違いについて見ていきましょう
 
 #### Pipe last
 
-Since version 4.01, OCaml includes a reverse application or "pipe" (`|>`)
-operator, an infix operator that applies the result from the previous expression
-the next function. As a backend for OCaml, Melange inherits this operator.
+バージョン 4.01 以降、OCaml には逆引き演算子または「パイプ」演算子（`|>`）が追加されました。OCaml のバックエンドとして、Melange はこの演算子を継承しています。
 
-The pipe operator could be implemented like this (the real implementation is a
-bit
-[different](https://github.com/ocaml/ocaml/blob/d9547617e8b14119beacafaa2546cbebfac1bfe5/stdlib/stdlib.ml#L48)):
+パイプ演算子は次のように実装できます（実際の実装は少し[異なります](https://github.com/ocaml/ocaml/blob/d9547617e8b14119beacafaa2546cbebfac1bfe5/stdlib/stdlib.ml#L48)）：
 
 ```ocaml
 let ( |> ) f g = g f
@@ -298,11 +215,9 @@ let ( |> ) f g = g f
 let (|>) = (f, g) => g(f);
 ```
 
-This operator is useful when multiple functions are applied to some value in
-sequence, with the output of each function becoming the input of the next (a
-_pipeline_).
+この演算子は、ある値に対して複数の関数を順番に適用し、各関数の出力が次の関数の入力になる（_パイプライン_）場合に便利です。
 
-For example, assuming we have a function `square` defined as:
+例えば、次のように定義された関数`square`があるとします：
 
 ```ocaml
 let square x = x * x
@@ -312,7 +227,7 @@ let square x = x * x
 let square = x => x * x;
 ```
 
-We are using it like:
+以下のように使用することができます：
 
 ```ocaml
 let ten = succ (square 3)
@@ -322,9 +237,7 @@ let ten = succ (square 3)
 let ten = succ(square(3));
 ```
 
-The pipe operator allows to write the computation for `ten` in left-to-right
-order, as [it has left
-associativity](https://v2.ocaml.org/manual/expr.html#ss:precedence-and-associativity):
+パイプ演算子を使えば、左から右の順に[結合性を保った](https://v2.ocaml.org/manual/expr.html#ss:precedence-and-associativity) `ten`を書くことができます：
 
 ```ocaml
 let ten = 3 |> square |> succ
@@ -334,9 +247,7 @@ let ten = 3 |> square |> succ
 let ten = 3 |> square |> succ;
 ```
 
-When working with functions that can take multiple arguments, the pipe operator
-works best when the functions take the data we are processing as the last
-argument. For example:
+複数の引数を取ることができる関数を扱う場合、パイプ演算子は、関数が処理中のデータを最後の引数として取るときに最もよく機能します。例えば：
 
 ```ocaml
 let sum = List.fold_left ( + ) 0
@@ -356,15 +267,9 @@ let sum_sq =
   |> sum; /* 1 + 4 + 9 */
 ```
 
-The above example can be written concisely because the `List.map` function in
-the [OCaml standard library](https://v2.ocaml.org/api/Stdlib.List.html) takes
-the list as the second argument. This convention is sometimes referred to as
-"data-last", and is widely adopted in the OCaml ecosystem. Data-last and the
-pipe operator `|>` work great with currying, so they are a great fit for the
-language.
+[OCaml 標準ライブラリ](https://v2.ocaml.org/api/Stdlib.List.html)の`List.map`関数は、第 2 引数にリストを取るので、上記の例は簡潔に書くことができます。この規約は「データ・ラスト」と呼ばれることもあり、OCaml のエコシステムでは広く採用されている。データ・ラストとパイプ演算子`|>`は currying と相性が良いので、OCaml 言語にぴったりです。
 
-However, there are some limitations when using data-last when it comes to error
-handling. In the given example, if we mistakenly used the wrong function:
+しかし、エラー処理に関しては、データ・ラストの使用にはいくつかの制限があります。この例では、間違った関数を使ったとします：
 
 ```ocaml
 let sum_sq =
@@ -374,48 +279,41 @@ let sum_sq =
 ```
 
 ```reasonml
-let sum_sq = [1, 2, 3] |> List.map(String.cat) |> sum;
+let sum_sq =
+  [1, 2, 3]
+  |> List.map(String.cat)
+  |> sum;
 ```
 
-The compiler would rightfully raise an error:
+コンパイラーは当然エラーを出します：
 
-<pre class="text-ocaml"><code class="language-text hljs plaintext">4 |   [ 1; 2; 3 ]
+```ocaml
+4 |   [ 1; 2; 3 ]
         ^
 Error: This expression has type int but an expression was expected of type
-         string</code></pre>
-<pre class="text-reasonml"><code class="language-text hljs plaintext">1 |   [ 1, 2, 3 ]
+         string
+```
+
+```reasonml
+1 |   [ 1, 2, 3 ]
         ^
 Error: This expression has type int but an expression was expected of type
-         string</code></pre>
+         string
+```
 
-Note that instead of telling us that we are passing the wrong function in
-`List.map` (`String.cat`), the error points to the list itself. This behavior
-aligns with the way type inference works, as the compiler infers types from left
-to right. Since `[ 1; 2; 3 ] |> List.map String.cat` is equivalent to `List.map
-String.cat [ 1; 2; 3 ]`, the type mismatch is detected when the list is type
-checked, after `String.cat` has been processed.
+`List.map（String.cat）`で間違った関数を渡していることを教えてくれるのではなく、エラーはリストそのものを指していることに注意してください。この動作は、コンパイラーが左から右へと型を推論する、型推論の動作方法と一致しています。`[1; 2; 3 ] |> List.map String.cat`は、`List.map String.cat [ 1; 2; 3 ]`と等価なので、型の不一致は、`String.cat`が処理された後、リストが型チェックされるときに検出されます。
 
-With the goal of addressing this kind of limitations, Melange introduces the
-pipe first operator <code class="text-ocaml">\|.</code><code
-class="text-reasonml">\-\></code>.
+このような制限に対処する目的で、Melange は Pipe first 演算子 `|.`(OCaml) / `->`(Reason)を導入しました。
 
 #### Pipe first
 
-To overcome the constraints mentioned above, Melange introduces the pipe first
-operator <code class="text-ocaml">\|.</code><code
-class="text-reasonml">\-\></code>.
+上記の制約を克服するために、Melange は Pipe first 演算子`|.`(OCaml) / `->`(Reason)を導入しました。
 
-As its name suggests, the pipe first operator is better suited for functions
-where the data is passed as the first argument.
+その名前が示すように、Pipe first 演算子はデータが第 1 引数として渡される関数に適しています。
 
-The functions in the <a class="text-ocaml"
-href="../api/ml/melange/Belt"><code>Belt</code> library</a><a
-class="text-reasonml" href="../api/re/melange/Belt"><code>Belt</code>
-library</a> included with Melange have been designed with the data-first
-convention in mind, so they work best with the pipe first operator.
+Melange に含まれる Belt ライブラリ([OCaml](https://melange.re/v2.2.0/api/ml/melange/Belt), [Reason](https://melange.re/v2.2.0/api/re/melange/Belt))の関数は、Data First の規約を念頭に置いて設計されているため、Pipe first 演算子との組み合わせが最適です。
 
-For example, we can rewrite the example above using `Belt.List.map` and the pipe
-first operator:
+例えば、上の例を`Belt.List.map`と Pipe first 演算子を使って書き直すことができます：
 
 ```ocaml
 let sum_sq =
@@ -425,11 +323,13 @@ let sum_sq =
 ```
 
 ```reasonml
-let sum_sq = [1, 2, 3]->(Belt.List.map(square))->sum;
+let sum_sq =
+  [1, 2, 3]
+  -> (Belt.List.map(square))
+  -> sum;
 ```
 
-We can see the difference on the error we get if the wrong function is passed to
-`Belt.List.map`:
+`Belt.List.map`に間違った関数が渡された場合のエラーの違いを見てみましょう：
 
 ```ocaml
 let sum_sq =
@@ -442,60 +342,58 @@ let sum_sq =
 let sum_sq = [1, 2, 3]->(Belt.List.map(String.cat))->sum;
 ```
 
-The compiler will show this error message:
+コンパイラーはこのエラー・メッセージを表示します：
 
-<pre class="text-ocaml"><code class="language-text hljs plaintext">4 |   |. Belt.List.map String.cat
+```
+4 |   |. Belt.List.map String.cat
                        ^^^^^^^^^^
 Error: This expression has type string -> string -> string
        but an expression was expected of type int -> 'a
-       Type string is not compatible with type int</code></pre>
-<pre class="text-reasonml"><code class="language-text hljs plaintext">2 | let sum_sq = [1, 2, 3]->(Belt.List.map(String.cat))->sum;
+       Type string is not compatible with type int
+```
+
+```
+2 | let sum_sq = [1, 2, 3]->(Belt.List.map(String.cat))->sum;
                                            ^^^^^^^^^^
 Error: This expression has type string -> string -> string
        but an expression was expected of type int -> 'a
-       Type string is not compatible with type int</code></pre>
+       Type string is not compatible with type int
+```
 
-The error points now to the function passed to `Belt.List.map`, which is more
-natural with the way the code is being written.
+エラーは`Belt.List.map`に渡された関数を指しています。
 
-Melange supports writing bindings to JavaScript using any of the two
-conventions, data-first or data-last, as shown in the ["Chaining"
-section](#chaining).
+Melange では、[Chaining](#chaining)のセクションで示したように、データファーストまたはデータラストという 2 つの規約を使用して JavaScript にバインディングを記述することができます。
 
-For further details about the differences between the two operators, the
-data-first and data-last conventions and the trade-offs between them, one can
-refer to [this related blog
-post](https://www.javierchavarri.com/data-first-and-data-last-a-comparison/).
+データファーストとデータラストの演算子の違いと、そのトレードオフについては、[こちらのブログ記事](https://www.javierchavarri.com/data-first-and-data-last-a-comparison/)を参照してください。
 
-## Data types and runtime representation
+## データ型とランタイム表現
 
-This is how each Melange type is converted into JavaScript values:
-
-| Melange                                                                                                                                                     | JavaScript                                                                                          |
+Melange の各型は以下のように JavaScript の値に変換されます：
+| Melange | JavaScript |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| int                                                                                                                                                         | number                                                                                              |
-| nativeint                                                                                                                                                   | number                                                                                              |
-| int32                                                                                                                                                       | number                                                                                              |
-| float                                                                                                                                                       | number                                                                                              |
-| string                                                                                                                                                      | string                                                                                              |
-| array                                                                                                                                                       | array                                                                                               |
-| tuple `(3, 4)`                                                                                                                                              | array `[3, 4]`                                                                                      |
-| bool                                                                                                                                                        | boolean                                                                                             |
-| <a class="text-ocaml" href="../api/ml/melange/Js/Nullable">Js.Nullable.t</a><a class="text-reasonml" href="../api/re/melange/Js/Nullable">Js.Nullable.t</a> | `null` / `undefined`                                                                                |
-| <a class="text-ocaml" href="../api/ml/melange/Js/Re">Js.Re.t</a><a class="text-reasonml" href="../api/re/melange/Js/Re">Js.Re.t</a>                         | [`RegExp`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp) |
-| Option.t `None`                                                                                                                                             | `undefined`                                                                                         |
-| Option.t <code class="text-ocaml">Some( Some .. Some (None))</code><code class="text-reasonml">Some(Some( .. Some(None)))</code>                            | internal representation                                                                             |
-| Option.t <code class="text-ocaml">Some 2</code><code class="text-reasonml">Some(2)</code>                                                                   | `2`                                                                                                 |
-| record <code class="text-ocaml">{x = 1; y = 2}</code><code class="text-reasonml">{x: 1; y: 2}</code>                                                        | object `{x: 1, y: 2}`                                                                               |
-| int64                                                                                                                                                       | array of 2 elements `[high, low]` high is signed, low unsigned                                      |
-| char                                                                                                                                                        | `'a'` -\> `97` (ascii code)                                                                         |
-| bytes                                                                                                                                                       | number array                                                                                        |
-| list `[]`                                                                                                                                                   | `0`                                                                                                 |
-| list <code class="text-ocaml">\[ x; y \]</code><code class="text-reasonml">\[x, y\]</code>                                                                  | `{ hd: x, tl: { hd: y, tl: 0 } }`                                                                   |
-| variant                                                                                                                                                     | See below                                                                                           |
-| polymorphic variant                                                                                                                                         | See below                                                                                           |
+| int | number |
+| nativeint | number |
+| int32 | number |
+| float | number |
+| string | string |
+| array | array |
+| tuple `(3, 4)` | array `[3, 4]` |
+| bool | boolean |
+| [Js.Nullable.t]([OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Nullable) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Nullable)) | `null` / `undefined` |
+| Js.Re.t([OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Re) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Re)) | [`RegExp`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp) |
+| Option.t `None` | `undefined` |
+| Option.t `Some( Some .. Some (None))`(OCaml), `Some(Some( .. Some(None)))`(Reason) | internal representation |
+| Option.t `Some 2`(OCaml), `Some(2)`(Reason) | `2` |
+| record `{x = 1; y = 2}`(OCaml) / `{x: 1; y: 2}`(Reason) | object `{x: 1, y: 2}` |
+| int64 | array of 2 elements `[high, low]` high is signed, low unsigned |
+| char | `'a'` -\> `97` (ascii code) |
+| bytes | number array |
+| list `[]` | `0` |
+| list `[ x; y ]`(OCaml) / `[x, y]`(Reason) | `{ hd: x, tl: { hd: y, tl: 0 } }` |
+| variant | 以下を参照 |
+| polymorphic variant | 以下を参照 |
 
-Variants with a single non-nullary constructor:
+単一の非 null コンストラクタを持つバリアント：
 
 ```ocaml
 type tree = Leaf | Node of int * tree * tree
@@ -511,7 +409,7 @@ type tree =
 /* Node(7, Leaf, Leaf) -> { _0: 7, _1: 0, _2: 0 } */
 ```
 
-Variants with more than one non-nullary constructor:
+複数の非 null コンストラクタを持つバリアント：
 
 ```ocaml
 type t = A of string | B of int
@@ -539,15 +437,9 @@ let u = `Foo; /* "Foo" */
 let v = `Foo(2); /* { NAME: "Foo", VAL: "2" } */
 ```
 
-Let’s see now some of these types in detail. We will first describe the [shared
-types](#shared-types), which have a transparent representation as JavaScript
-values, and then go through the [non-shared types](#non-shared-data-types), that
-have more complex runtime representations.
+それでは、これらの型のいくつかを詳しく見ていきましょう。まず、JavaScript の値として透過的に表現される[共有型](#shared-types)について説明し、次に、より複雑な実行時表現を持つ[非共有型](#non-shared-data-types)について説明します。
 
-> **_NOTE:_** Relying on the non-shared data types runtime representations by
-> reading or writing them manually from JavaScript code that communicates with
-> Melange code might lead to runtime errors, as these representations might
-> change in the future.
+> **_NOTE:_** Melange コードと通信する JavaScript コードから非共有データ型の実行時表現を手動で読み書きすることで、これらの表現が将来変更される可能性があるため、実行時エラーにつながる可能性があります。
 
 ### Shared types
 
