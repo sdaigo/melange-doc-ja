@@ -1,0 +1,34 @@
+{
+	"index": "Home",
+	"rationale": "Why",
+	"getting-started": "Getting Started",
+	"-- Learn": {
+    "type": "separator",
+    "title": "LEARN"
+  },
+	"new-to-ocaml": "New to OCaml?",
+	"package-management": "Package Management",
+	"build-system": "Build System",
+	"communicate-with-javascript": "Communicate with JavaScript",
+	"how-to-guide": "How to Guide",
+	"melange-for-x-developers": "Melange for X Developers",
+	"-- Reference": {
+    "type": "separator",
+    "title": "REFERENCE"
+  },
+	"api": "API",
+	"-- Try": {
+    "type": "separator",
+    "title": "TRY"
+  },
+	"playground": {
+    "title": "Playground",
+    "href": "https://melange.re/v2.2.0/playground/"
+  },
+	"-- About": {
+    "type": "separator",
+    "title": "ABOUT"
+  },
+	"community": "Community",
+	"roadmap": "Roadmap"
+}
