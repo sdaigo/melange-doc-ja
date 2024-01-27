@@ -4,7 +4,7 @@ Ocaml for JavaScript developers
 
 ---
 
-Melange は JavaScript を生成する OCaml コンパイラのバックエンドです。Melange は、OCaml と JavaScript の両方のエコシステムと最高の統合を提供するように努めています。Melange についてより詳しく知るには、まず[入門チュートリアル](https://melange.re/v2.2.0/getting-started/)を読み、詳しくは[「学ぶ」](https://melange.re/v2.2.0/new-to-ocaml/)セクションをご覧ください。
+Melange は JavaScript を生成する OCaml コンパイラのバックエンドです。Melange は、OCaml と JavaScript の両方のエコシステムと最高の統合を提供するように努めています。Melange についてより詳しく知るには、まず[入門チュートリアル](getting-started/)を読み、詳しくは[「学ぶ」](new-to-ocaml/)セクションをご覧ください。
 
 ## Features
 
