@@ -833,11 +833,7 @@ Melange では、これら 4 つのユースケースに基づいて JavaScript 
 
 #### Using OCaml records
 
-If your JavaScript object has fixed fields, then it’s conceptually like an
-[OCaml
-record](https://v2.ocaml.org/manual/coreexamples.html#s%3Atut-recvariants).
-Since Melange compiles records into JavaScript objects, the most common way to
-bind to JavaScript objects is using records.
+JavaScript オブジェクトに固定フィールドがある場合、それは概念的に[OCaml のレコード](https://v2.ocaml.org/manual/coreexamples.html#s%3Atut-recvariants)のようなものです。Melange はレコードを JavaScript オブジェクトにコンパイルするため、JavaScript オブジェクトにバインドする最も一般的な方法はレコードを使用することです。
 
 ```ocaml
 type person = {
@@ -861,7 +857,7 @@ type person = {
 let john_name = john.name;
 ```
 
-This is the generated JavaScript:
+以下のように JavaScript が生成されます：
 
 ```js
 var MySchool = require('MySchool')
@@ -869,12 +865,9 @@ var MySchool = require('MySchool')
 var john_name = MySchool.john.name
 ```
 
-External functions are documented in [a previous section](#external-functions).
-The `mel.module` attribute is documented
-[here](#using-functions-from-other-javascript-modules).
+Exteranl 関数については[前のセクション](#external-関数)で説明しました。`mel.module` attribute は[ここ](#using-functions-from-other-javascript-modules)に書かれています。
 
-If you want or need to use different field names on the Melange and the
-JavaScript sides, you can use the `mel.as` decorator:
+Melange 側と JavaScript 側で異なるフィールド名を使用したい、または使用する必要がある場合は、`mel.as`デコレータを使用できます：
 
 ```ocaml
 type action = {
@@ -893,7 +886,7 @@ type action = {
 let action = {type_: "ADD_USER"};
 ```
 
-Which generates the JavaScript code:
+以下のように JavaScript が生成されます：
 
 ```js
 var action = {
@@ -901,12 +894,9 @@ var action = {
 }
 ```
 
-This is useful to map to JavaScript attribute names that cannot be expressed in
-Melange, for example, where the JavaScript name we want to generate is a
-[reserved keyword](https://v2.ocaml.org/manual/lex.html#sss:keywords).
+これは、Melange で表現できない JavaScript の属性名にマッピングするのに便利です。たとえば、生成したい JavaScript の名前が[予約語](https://v2.ocaml.org/manual/lex.html#sss:keywords)である場合などです。
 
-It is also possible to map a Melange record to a JavaScript array by passing
-indices to the `mel.as` decorator:
+`mel.as`デコレーターにインデクスを渡すことで、Melange レコードを JavaScript の配列にマッピングすることも可能です：
 
 ```ocaml
 type t = {
@@ -928,7 +918,7 @@ type t = {
 let value = {foo: 7, bar: "baz"};
 ```
 
-And its JavaScript generated code:
+以下のように JavaScript が生成されます：
 
 ```js
 var value = [7, 'baz']
@@ -936,17 +926,11 @@ var value = [7, 'baz']
 
 #### Using `Js.t` objects
 
-Alternatively to records, Melange offers another type that can be used to
-produce JavaScript objects. This type is `'a Js.t`, where `'a` is an [OCaml
-object](https://v2.ocaml.org/manual/objectexamples.html).
+レコードの代わりに、Melange は JavaScript オブジェクトを生成するために使用できる別の型を提供しています。この型は`'a Js.t`で、`'a`は[OCaml のオブジェクト](https://v2.ocaml.org/manual/objectexamples.html)です。
 
-The advantage of objects versus records is that no type declaration is needed in
-advance, which can be helpful for prototyping or quickly generating JavaScript
-object literals.
+オブジェクトとレコードを比較した場合の利点は、事前に型宣言を行う必要がないため、プロトタイピングや JavaScript のオブジェクトリテラルを素早く生成するのに役立ちます。
 
-Melange provides some ways to create `Js.t` object values, as well as accessing
-the properties inside them. To create values, the `[%mel.obj]` extension is
-used, and the `##` infix operator allows to read from the object properties:
+Melange では、`Js.t`オブジェクトの値を作成する方法や、オブジェクト内のプロパティにアクセスする方法を提供しています。値を作成するには、`[%mel.obj]` 拡張子を使用し、`##` infix 演算子でオブジェクトのプロパティを読み込むことができます：
 
 ```ocaml
 let john = [%mel.obj { name = "john"; age = 99 }]
@@ -958,7 +942,7 @@ let john = {"name": "john", "age": 99};
 let t = john##name;
 ```
 
-Which generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var john = {
@@ -969,14 +953,9 @@ var john = {
 var t = john.name
 ```
 
-Note that object types allow for some flexibility that the record types do not
-have. For example, an object type can be coerced to another with fewer values or
-methods, while it is impossible to coerce a record type to another one with
-fewer fields. So different object types that share some methods can be mixed in
-a data structure where only their common methods are visible.
+オブジェクト型にはレコード型にはない柔軟性があることに注意してください。例えば、あるオブジェクト型を、より少ない値やメソッドを持つ別のオブジェクト型に強制することができますが、レコード型を、より少ないフィールドを持つ別のオブジェクト型に強制することは不可能です。そのため、いくつかのメソッドを共有する異なるオブジェクト型を、共通のメソッドだけが見えるデータ構造の中に混在させることができます。
 
-To give an example, one can create a function that operates in all the object
-types that include a field `name` that is of type string, e.g.:
+例えば、文字列型のフィールド`name`を含むすべてのオブジェクト型で操作する関数を作ることができます：
 
 ```ocaml
 let name_extended obj = obj##name ^ " wayne"
@@ -992,26 +971,17 @@ let one = name_extended({"name": "john", "age": 99});
 let two = name_extended({"name": "jane", "address": "1 infinite loop"});
 ```
 
-To read more about objects and polymorphism we recommend checking the [OCaml
-docs](https://ocaml.org/docs/objects) or the [OCaml
-manual](https://v2.ocaml.org/manual/objectexamples.html).
+オブジェクトとポリモーフィズムについてもっと読むには、[OCaml のドキュメント](https://ocaml.org/docs/objects)か[OCaml のマニュアル](https://v2.ocaml.org/manual/objectexamples.html)をチェックしてください。
 
 #### Using external functions
 
-We have already explored one approach for creating JavaScript object literals by
-using [`Js.t` values and the `mel.obj` extension](#using-jst-objects).
+[`Js.t`値と`mel.obj`extension](#using-jst-objects)を使って JavaScript のオブジェクト・リテラルを作成する方法についてはすでに説明しました。
 
-Melange additionally offers the `mel.obj` attribute, which can be used in
-combination with external functions to create JavaScript objects. When these
-functions are called, they generate objects with fields corresponding to the
-labeled arguments of the function.
+Melange はさらに`mel.obj` attribute を提供しており、外部関数と組み合わせて JavaScript オブジェクトを作成することができます。これらの関数が呼び出されると、関数のラベル付き引数に対応するフィールドを持つオブジェクトが生成されます。
 
-If any of these labeled arguments are defined as optional and omitted during
-function application, the resulting JavaScript object will exclude the
-corresponding fields. This allows to create runtime objects and control whether
-optional keys are emitted at runtime.
+これらのラベル付き引数のいずれかがオプショナルとして定義され、関数適用時に省略された場合、結果の JavaScript オブジェクトは対応するフィールドを除外します。これにより、実行時オブジェクトを作成し、オプショナルキーが実行時に発行されるかどうかを制御することができます。
 
-For example, assuming we need to bind to a JavaScript object like this:
+例えば、次のような JavaScript オブジェクトにバインドする必要がある場合：
 
 ```js
 var homeRoute = {
@@ -1022,8 +992,7 @@ var homeRoute = {
 }
 ```
 
-The first three fields are required and the `options` field is optional. You can
-declare a binding function like:
+最初の 3 つのフィールドは必須で、オプション・フィールドは任意です。バインディング関数は次のように宣言します：
 
 ```ocaml
 external route :
@@ -1049,27 +1018,15 @@ external route:
   _;
 ```
 
-Note that the empty string at the end of the function is used to make it
-syntactically valid. The value of this string is ignored by the compiler.
+関数末尾の空文字列は、構文的に有効にするために使用されることに注意してください。この文字列の値はコンパイラによって無視されます。
 
-Since there is an optional argument `options`, an additional unlabeled argument
-of type `unit` is included after it. It allows to omit the optional argument on
-function application. More information about labeled optional arguments can be
-found in the [OCaml
-manual](https://v2.ocaml.org/manual/lablexamples.html#s:optional-arguments).
+オプションの引数`options`があるので、その後ろに`unit`型のラベルのない引数が追加されます。これにより、関数の適用時にオプション引数を省略することができます。ラベル付きオプション引数の詳細については、[OCaml のマニュアル](https://v2.ocaml.org/manual/lablexamples.html#s:optional-arguments)を参照してください。
 
-The return type of the function should be left unspecified using the wildcard
-type `_`. Melange will automatically infer the type of the resulting JavaScript
-object.
+関数の戻り値の型は、ワイルドカード型 `_` を使って指定しないでおきます。Melange は自動的に結果の JavaScript オブジェクトの型を推測します。
 
-In the route function, the `_type` argument starts with an underscore. When
-binding to JavaScript objects with fields that are reserved keywords in OCaml,
-Melange allows the use of an underscore prefix for the labeled arguments. The
-resulting JavaScript object will have the underscore removed from the field
-names. This is only required for the `mel.obj` attribute, while for other cases,
-the `mel.as` attribute can be used to rename fields.
+route 関数では、`_type`引数はアンダースコアで始まります。OCaml の予約語であるフィールドを持つ JavaScript オブジェクトにバインドする場合、Melange ではラベル付き引数にアンダースコアの接頭辞を使用できます。その結果、JavaScript オブジェクトのフィールド名からアンダースコアが取り除かれます。これは`mel.obj` attribute の場合のみ必要で、それ以外の場合は`mel.as` attribute を使用してフィールド名を変更することができます。
 
-If we call the function like this:
+このように関数を呼び出すと：
 
 ```ocaml
 let homeRoute = route ~_type:"GET" ~path:"/" ~action:(fun _ -> Js.log "Home") ()
@@ -1080,8 +1037,7 @@ let homeRoute =
   route(~_type="GET", ~path="/", ~action=_ => Js.log("Home"), ());
 ```
 
-We get the following JavaScript, which does not include the `options` field
-since its argument wasn’t present:
+以下のような JavaScript が生成され、`options`フィールドは引数に与えられていないため、含まれません：
 
 ```javascript
 var homeRoute = {
@@ -1095,8 +1051,7 @@ var homeRoute = {
 
 #### Bind to object properties
 
-If you need to bind only to the property of a JavaScript object, you can use
-`mel.get` and `mel.set` to access it using the dot notation `.`:
+JavaScript オブジェクトのプロパティにのみバインドする必要がある場合、`mel.get`と`mel.set`を使って`.`記法でアクセスすることができます：
 
 ```ocaml
 (* Abstract type for the `document` value *)
@@ -1124,7 +1079,7 @@ let current = get_title(document);
 let () = set_title(document, "melange");
 ```
 
-This generates:
+以下のように JavaScript が生成されます：
 
 ```javascript
 var current = document.title
@@ -1134,6 +1089,8 @@ document.title = 'melange'
 Alternatively, if some dynamism is required on the way the property is accessed,
 you can use `mel.get_index` and `mel.set_index` to access it using the bracket
 notation `[]`:
+
+また、動的にプロパティへアクセスする場合は、`mel.get_index`と`mel.set_index`を使って、括弧記法`[]`でアクセスできます：
 
 ```ocaml
 type t
@@ -1160,7 +1117,7 @@ let () = {
 };
 ```
 
-Which generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var i32arr = new Int32Array(3)
@@ -1170,24 +1127,18 @@ console.log(i32arr[0])
 
 ### Objects with dynamic shape (dictionary-like)
 
-Sometimes JavaScript objects are used as dictionaries. In these cases:
+JavaScript のオブジェクトが辞書として使われることもあります。このような場合：
 
-- All values stored in the object belong to the same type
-- Key-value pairs can be added or removed at runtime
+- オブジェクトに格納された値はすべて同じ型に属する
+- キーと値のペアは、実行時に追加または削除できる
 
-For this particular use case of JavaScript objects, Melange exposes a specific
-type `Js.Dict.t`. The values and functions to work with values of this type are
-defined in the <a class="text-ocaml"
-href="../api/ml/melange/Js/Dict"><code>Js.Dict</code> module</a><a
-class="text-reasonml" href="../api/re/melange/Js/Dict"><code>Js.Dict</code>
-module</a>, with operations like `get`, `set`, etc.
+このような JavaScript オブジェクトを使用する場合、Melange では特定の型`Js.Dict.t`を公開しています。この型の値および値を扱う関数は、`Js.Dict`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Dict) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Dict)）で定義されており、`get`、`set`などの操作が可能です。
 
-Values of the type `Js.Dict.t` compile to JavaScript objects.
+`Js.Dict.t`型の値は、JavaScript オブジェクトにコンパイルされます。
 
 ### JavaScript classes
 
-JavaScript classes are special kinds of objects. To interact with classes,
-Melange exposes `mel.new` to emulate e.g. `new Date()`:
+JavaScript のクラスは特殊なオブジェクトです。クラスと相互作用するために、Melange は例えば`new Date()`をエミュレートする`mel.new`を公開しています：
 
 ```ocaml
 type t
@@ -1201,14 +1152,13 @@ type t;
 let date = create_date();
 ```
 
-Which generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var date = new Date()
 ```
 
-You can chain `mel.new` and `mel.module` if the JavaScript class you want to
-work with is in a separate JavaScript module:
+扱いたい JavaScript クラスが別の JavaScript モジュールにある場合、`mel.new`と`mel.module`をチェインさせることができます：
 
 ```ocaml
 type t
@@ -1222,7 +1172,7 @@ type t;
 let myBook = book();
 ```
 
-Which generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var Book = require('Book')
@@ -1233,8 +1183,7 @@ var myBook = new Book()
 
 ### Using global functions or values
 
-Binding to a JavaScript function available globally makes use of `external`,
-like with objects. But unlike objects, there is no need to add any attributes:
+グローバルに利用可能な JavaScript 関数へのバインディングは、オブジェクトと同様に`external`を利用します。しかし、オブジェクトとは異なり、attributes を追加する必要はありません：
 
 ```ocaml
 (* Abstract type for `timeoutId` *)
@@ -1256,13 +1205,9 @@ let id = setTimeout(() => Js.log("hello"), 100);
 let () = clearTimeout(id);
 ```
 
-> **_NOTE:_** The bindings to `setTimeout` and `clearTimeout` are shown here for
-> learning purposes, but they are already available in the <a class="text-ocaml"
-> href="../api/ml/melange/Js/Global"><code>Js.Global</code> module</a><a
-> class="text-reasonml"
-> href="../api/re/melange/Js/Global"><code>Js.Global</code> module</a>.
+> **_NOTE:_** `setTimeout`と`clearTimeout`のバインディングは、ここでは学習のために示していますが、これらはすで`Js.Global`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Global) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Global)）で利用可能です。
 
-Generates:
+以下のように JavaScript が生成されます：
 
 ```javascript
 var id = setTimeout(function (param) {
@@ -1272,7 +1217,7 @@ var id = setTimeout(function (param) {
 clearTimeout(id)
 ```
 
-Global bindings can also be applied to values:
+グローバルバインディングは値にも適用できます：
 
 ```ocaml
 (* Abstract type for `document` *)
@@ -1290,7 +1235,7 @@ external document: document = "document";
 let document = document;
 ```
 
-Which generates:
+以下のように JavaScript が生成されます：
 
 ```javascript
 var doc = document
@@ -1298,8 +1243,7 @@ var doc = document
 
 ### Using functions from other JavaScript modules
 
-`mel.module` allows to bind to values that belong to another JavaScript module.
-It accepts a string with the name of the module, or the relative path to it.
+`mel.module`は、他の JavaScript モジュールに属する値にバインドすることができます。モジュールの名前か相対パスを文字列で指定します。
 
 ```ocaml
 external dirname : string -> string = "dirname" [@@mel.module "path"]
@@ -1311,7 +1255,7 @@ let root = dirname "/User/github"
 let root = dirname("/User/github");
 ```
 
-Generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var Path = require('path')
@@ -1320,13 +1264,9 @@ var root = Path.dirname('/User/github')
 
 ### Binding to properties inside a module or global
 
-For cases when we need to create bindings for a property within a module or a
-global JavaScript object, Melange provides the `mel.scope` attribute.
+モジュールやグローバル JavaScript オブジェクト内のプロパティにバインディングを作成する必要がある場合、Melange は`mel.scope` attribute を提供します。
 
-For example, if we want to write some bindings for a specific property
-`commands` from [the `vscode`
-package](https://code.visualstudio.com/api/references/vscode-api#commands), we
-can do:
+例えば、[`vscode`パッケージ](https://code.visualstudio.com/api/references/vscode-api#commands)の特定のプロパティコマンドに対するバインディングを書きたい場合、次のようにします：
 
 ```ocaml
 type param
@@ -1344,7 +1284,7 @@ external executeCommands: (string, array(param)) => unit;
 let f = (a, b, c) => executeCommands("hi", [|a, b, c|]);
 ```
 
-Which compiles to:
+以下のようにコンパイルされます：
 
 ```javascript
 var Vscode = require('vscode')
@@ -1354,10 +1294,9 @@ function f(a, b, c) {
 }
 ```
 
-The `mel.scope` attribute can take multiple arguments as payload, in case we
-want to reach deeper into the object from the module we are importing.
+`mel.scope`属性は、ペイロードとして複数の引数を取ることができます。
 
-For example:
+例：
 
 ```ocaml
 type t
@@ -1377,7 +1316,7 @@ external back: t = "back";
 let camera_type_back = back;
 ```
 
-Which generates:
+以下のように JavaScript が生成されます：
 
 ```javascript
 var ExpoCamera = require('expo-camera')
@@ -1385,8 +1324,7 @@ var ExpoCamera = require('expo-camera')
 var camera_type_back = ExpoCamera.Camera.Constants.Type.back
 ```
 
-It can be used without `mel.module`, to created scoped bindings to global
-values:
+`mel.module`を使わずに、グローバル値へのスコープ付きバインディングを作成することができます：
 
 ```ocaml
 external imul : int -> int -> int = "imul" [@@mel.scope "Math"]
@@ -1400,13 +1338,13 @@ let res = imul 1 2
 let res = imul(1, 2);
 ```
 
-Which produces:
+以下のように JavaScript が生成されます：
 
 ```javascript
 var res = Math.imul(1, 2)
 ```
 
-Or it can be used together with `mel.new`:
+また、`mel.new`と併用することもできます：
 
 ```ocaml
 type t
@@ -1426,7 +1364,7 @@ external create: unit => t = "GUI";
 let gui = create();
 ```
 
-Which generates:
+以下のように JavaScript が生成されます：
 
 ```javascript
 var DatGui = require('dat.gui')
@@ -1436,14 +1374,11 @@ var gui = new DatGui.default.GUI()
 
 ### Labeled arguments
 
-OCaml has [labeled arguments](https://v2.ocaml.org/manual/lablexamples.html),
-which can also be optional, and work with `external` as well.
+OCaml には[ラベル付き引数](https://v2.ocaml.org/manual/lablexamples.html)があり、これはオプションでも可能で、`external`でも動作します。
 
-Labeled arguments can be useful to provide more information about the arguments
-of a JavaScript function that is called from Melange.
+ラベル付き引数は、Melange から呼び出される JavaScript 関数の引数に関する詳細情報を提供するのに便利です。
 
-Let’s say we have the following JavaScript function, that we want to call from
-Melange:
+例えば、次のような JavaScript 関数を Melange から呼び出すとします：
 
 ```js
 // MyGame.js
@@ -1455,8 +1390,7 @@ draw(10, 20)
 draw(20, 20, true)
 ```
 
-When writing Melange bindings, we can add labeled arguments to make things more
-clear:
+Melange バインディングを記述する際、ラベル付き引数を追加することで、より明確にすることができます：
 
 ```ocaml
 external draw : x:int -> y:int -> ?border:bool -> unit -> unit = "draw"
@@ -1474,7 +1408,7 @@ let () = draw(~x=10, ~y=20, ~border=true, ());
 let () = draw(~x=10, ~y=20, ());
 ```
 
-Generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var MyGame = require('MyGame')
@@ -1483,18 +1417,11 @@ MyGame.draw(10, 20, true)
 MyGame.draw(10, 20, undefined)
 ```
 
-The generated JavaScript function is the same, but now the usage in Melange is
-much clearer.
+生成される JavaScript 関数は同じですが、Melange での使い方がより明確になります。
 
-**Note**: in this particular case, a final param of type unit, `()` must be
-added after `border`, since `border` is an optional argument at the last
-position. Not having the last param `unit` would lead to a warning, which is
-explained in detail [in the OCaml
-documentation](https://ocaml.org/docs/labels#warning-this-optional-argument-cannot-be-erased).
+**Note**: この例では最後の引数の方は unit で、`()`を`border`の後に加えなければなりません。なぜなら、`border`は最後の位置でオプションの引数だからです。最後の param が unit 型でない場合には警告が出ますが、これは[OCaml のドキュメント](https://ocaml.org/docs/labels#warning-this-optional-argument-cannot-be-erased)で詳しく説明されています。
 
-Note that you can freely reorder the labeled arguments when applying the
-function on the Melange side. The generated code will maintain the original
-order that was used when declaring the function:
+Melange 側で関数を適用する際、ラベル付けされた引数を自由に並べ替えることができることに注意してください。生成されるコードでは、関数宣言時に使用された元の順序が維持されます：
 
 ```ocaml
 external draw : x:int -> y:int -> ?border:bool -> unit -> unit = "draw"
@@ -1510,7 +1437,7 @@ let () = draw(~x=10, ~y=20, ());
 let () = draw(~y=20, ~x=10, ());
 ```
 
-Generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var MyGame = require('MyGame')
@@ -1521,12 +1448,9 @@ MyGame.draw(10, 20, undefined)
 
 ### Calling an object method
 
-If we need to call a JavaScript method, Melange provides the attribute
-`mel.send`.
+JavaScript のメソッドを呼び出す必要がある場合、Melange には`mel.send`という属性があります。
 
-> In the following snippets, we will be referring to a type `Dom.element`, which
-> is provided within the library `melange.dom`. You can add it to your project
-> by including `(libraries melange.dom)` to your `dune` file:
+> 以下のスニペットでは、ライブラリ`melange.dom`で提供されている`Dom.element`型を参照します。`dune`ファイルに`(libraries melange.dom)`をインクルードすることで、プロジェクトに追加することができます：
 
 ```ocaml
 (* Abstract type for the `document` global *)
@@ -1550,21 +1474,15 @@ external get_by_id: (document, string) => Dom.element = "getElementById";
 let el = get_by_id(document, "my-id");
 ```
 
-Generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var el = document.getElementById('my-id')
 ```
 
-When using `mel.send`, the first argument will be the object that holds the
-property with the function we want to call. This combines well with the pipe
-first operator <code class="text-ocaml">\|.</code><code
-class="text-reasonml">\-\></code>, see the ["Chaining"](#chaining) section
-below.
+`mel.send`を使用する場合、第一引数は呼び出したい関数を持つプロパティを保持するオブジェクトになります。これは pipe first 演算子（Ocaml: `|.` / Reason: `->`）とうまく組み合わされます。
 
-If we want to design our bindings to be used with OCaml pipe last operator `|>`,
-there is an alternate `mel.send.pipe` attribute. Let’s rewrite the example above
-using it:
+バインディングを OCaml の pipe last 演算子`|>`で使用するように設計したい場合、代替の`mel.send.pipe`属性があります。それを使って上の例を書き換えてみましょう：
 
 ```ocaml
 (* Abstract type for the `document` global *)
@@ -1588,7 +1506,7 @@ external get_by_id: string => Dom.element = "getElementById";
 let el = get_by_id("my-id", document);
 ```
 
-Generates the same code as `mel.send`:
+`mel.send`と同じコードを生成します：
 
 ```js
 var el = document.getElementById('my-id')
@@ -1596,30 +1514,27 @@ var el = document.getElementById('my-id')
 
 #### Chaining
 
-It is common to find this kind of API in JavaScript: `foo().bar().baz()`. This
-kind of API can be designed with Melange externals. Depending on which
-convention we want to use, there are two attributes available:
+この種の API は JavaScript でよく見られます: `foo().bar().baz()`。この種の API は、Melange external で 設計することができます。どちらの規約を使用するかによって、2 つの attributes が利用できます：
 
-- For a data-first convention, the `mel.send` attribute, in combination with
-  [the pipe first operator](#pipe-first) <code
-  class="text-ocaml">\|.</code><code class="text-reasonml">\-\></code>
-- For a data-last convention, the `mel.send.pipe` attribute, in combination with
-  OCaml [pipe last operator](#pipe-last) `|>`.
+- データファーストの場合、`mel.send`属性と[pipe first 演算子](#pipe-first)（Ocaml: `|.` / Reason: `->`）を組み合わせます。
+- データラストの場合、`mel.send.pipe`属性と OCaml の[pipe last 演算子](#pipe-last)`|>`を組み合わせます。
 
 Let’s see first an example of chaining using data-first convention with the pipe
 first operator <code class="text-ocaml">\|.</code><code
 class="text-reasonml">\-\></code>:
+
+まず、pipe first 演算子（Ocaml: `|.` / Reason: `->`）を使ったデータ・ファーストによるチェインの例を見てみましょう：
 
 ```ocaml
 (* Abstract type for the `document` global *)
 type document
 
 external document : document = "document"
+[@@mel.send]
 external get_by_id : document -> string -> Dom.element = "getElementById"
-  [@@mel.send]
+[@@mel.send]
 external get_by_classname : Dom.element -> string -> Dom.element
   = "getElementsByClassName"
-  [@@mel.send]
 
 let el = document |. get_by_id "my-id" |. get_by_classname "my-class"
 ```
@@ -1638,23 +1553,23 @@ external get_by_classname: (Dom.element, string) => Dom.element =
 let el = document->(get_by_id("my-id"))->(get_by_classname("my-class"));
 ```
 
-Will generate:
+以下のように JavaScript が生成されます：
 
 ```javascript
 var el = document.getElementById('my-id').getElementsByClassName('my-class')
 ```
 
-Now with pipe last operator `|>`:
+では、pipe last 演算子 `|>`の場合:
 
 ```ocaml
 (* Abstract type for the `document` global *)
 type document
 
 external document : document = "document"
+[@@mel.send.pipe: document]
 external get_by_id : string -> Dom.element = "getElementById"
-  [@@mel.send.pipe: document]
+[@@mel.send.pipe: Dom.element]
 external get_by_classname : string -> Dom.element = "getElementsByClassName"
-  [@@mel.send.pipe: Dom.element]
 
 let el = document |> get_by_id "my-id" |> get_by_classname "my-class"
 ```
@@ -1672,7 +1587,7 @@ external get_by_classname: string => Dom.element = "getElementsByClassName";
 let el = document |> get_by_id("my-id") |> get_by_classname("my-class");
 ```
 
-Will generate the same JavaScript as the pipe first version:
+以下のように pipe first の場合と同じ JavaScript が生成されます：
 
 ```javascript
 var el = document.getElementById('my-id').getElementsByClassName('my-class')
@@ -1680,10 +1595,7 @@ var el = document.getElementById('my-id').getElementsByClassName('my-class')
 
 ### Variadic function arguments
 
-Sometimes JavaScript functions take an arbitrary amount of arguments. For these
-cases, Melange provides the `mel.variadic` attribute, which can be attached to
-the `external` declaration. However, there is one caveat: all the variadic
-arguments need to belong to the same type.
+JavaScript の関数は任意の数の引数を取ることがあります。このような場合、Melange では`mel.variadic` attribute を `external`に付加することができます。ただし、1 つだけ注意点があります。variadic 引数はすべて同じ型に属する必要があります。
 
 ```ocaml
 external join : string array -> string = "join"
@@ -1697,18 +1609,14 @@ external join: array(string) => string = "join";
 let v = join([|"a", "b"|]);
 ```
 
-Generates:
+以下のように JavaScript が生成されます：
 
 ```js
 var Path = require('path')
 var v = Path.join('a', 'b')
 ```
 
-If more dynamism is needed, there is a way to inject elements with different
-types in the array and still have Melange compile to JavaScript values that are
-not wrapped using the OCaml
-[`unboxed`](https://v2.ocaml.org/manual/attributes.html) attribute, which was
-mentioned [in the OCaml attributes section](#reusing-ocaml-attributes):
+さらにダイナミズムが必要な場合は、[OCaml attributes のセクション](#reusing-ocaml-attributes) で説明した OCaml [`unboxed`](https://v2.ocaml.org/manual/attributes.html) attribute を使用して、異なる型の要素を配列に挿入し、ラップされていない JavaScript の値に Melange をコンパイルする方法があります：
 
 ```ocaml
 type hide = Hide : 'a -> hide [@@unboxed]
@@ -1729,7 +1637,7 @@ external join: array(hide) => string = "join";
 let v = join([|Hide("a"), Hide(2)|]);
 ```
 
-Compiles to:
+以下のようにコンパイルされます：
 
 ```javascript
 var Path = require('path')
@@ -1739,14 +1647,11 @@ var v = Path.join('a', 2)
 
 ### Bind to a polymorphic function
 
-Some JavaScript libraries will define functions where the arguments can vary on
-both type and shape. There are two approaches to bind to those, depending on how
-dynamic they are.
+JavaScript ライブラリの中には、引数の型や形が変化する関数を定義しているものがあります。そのような関数にバインドするには、それがどの程度動的かによって 2 つのアプローチがあります。
 
-#### Approach 1: Multiple external functions
+#### Approach 1: 複数の external 関数
 
-If it is possible to enumerate the many forms an overloaded JavaScript function
-can take, a flexible approach is to bind to each form individually:
+オーバーロードされた JavaScript 関数が取りうるフォームを数多く列挙できるのであれば、柔軟なアプローチとしては、それぞれのフォームに個別にバインドすることです：
 
 ```ocaml
 external drawCat : unit -> unit = "draw" [@@mel.module "MyGame"]
@@ -1762,15 +1667,13 @@ external draw : string -> useRandomAnimal:bool -> unit = "draw"
 external draw: (string, ~useRandomAnimal: bool) => unit = "draw";
 ```
 
-Note how all three externals bind to the same JavaScript function, `draw`.
+3 つの external 関数がすべて同じ JavaScript 関数`draw`にバインドされていることに注目してください。
 
 #### Approach 2: Polymorphic variant + `mel.unwrap`
 
-In some cases, the function has a constant number of arguments but the type of
-the argument can vary. For cases like this, we can model the argument as a
-variant and use the `mel.unwrap` attribute in the external.
+場合によっては、関数の引数の数は一定だが、引数の型が異なることがある。このような場合、引数を Variant としてモデル化し、外部で`mel.unwrap` attribute を使用することができます。
 
-Let’s say we want to bind to the following JavaScript function:
+次の JavaScript 関数にバインドしたいとします：
 
 ```js
 function padLeft(value, padding) {
@@ -1794,6 +1697,13 @@ certain requirements on the type it is applied to:
 - Each variant tag needs to have an argument
 - The variant type can not be opened (can’t use `>`)
 
+`padding` 引数は数値でも文字列でもよいので、`mel.unwrap` を使って定義することができます。重要なのは、`mel.unwrap`が適用される型に一定の要件を課すことです：
+
+- [多相 Variant](https://v2.ocaml.org/manual/polyvariant.html)である必要がある
+- 定義がインライン化されていること
+- 各 Variant タグは引数を持つ必要がある。
+- Variant 型はオープンできない（`>`は使えない）
+
 ```ocaml
 external padLeft:
   string
@@ -1816,33 +1726,22 @@ let _ = padLeft("Hello World", `Int(4));
 let _ = padLeft("Hello World", `Str("Message from Melange: "));
 ```
 
-Which produces the following JavaScript:
+以下のように JavaScript を生成します：
 
 ```js
 padLeft('Hello World', 4)
 padLeft('Hello World', 'Message from Melange: ')
 ```
 
-As we saw in the [Non-shared data types](#non-shared-data-types) section, we
-should rather avoid passing variants directly to the JavaScript side. By using
-`mel.unwrap` we get the best of both worlds: from Melange we can use variants,
-while JavaScript gets the raw values inside them.
+[非共有データ型](#non-shared-data-types)のセクションで見たように、JavaScript 側に直接 Variant を渡すのは避けるべきです。`mel.unwrap`を使うことで、Melange から Variant を使うことができ、JavaScript は Variant 内の生の値を得ることができます。
 
 ### Using polymorphic variants to bind to enums
 
-Some JavaScript APIs take a limited subset of values as input. For example,
-Node’s `fs.readFileSync` second argument can only take a few given string
-values: `"ascii"`, `"utf8"`, etc. Some other functions can take values from a
-few given integers, like the `createStatusBarItem` function in VS Code API,
-which can take an `alignment` parameter that can only be [`1` or
-`2`](https://github.com/Microsoft/vscode/blob/2362ec665c84a1519162b50c36ed4f29d1e20f62/src/vs/vscode.d.ts#L4098-L4109).
+JavaScript の API の中には、限られた値のサブセットを入力として受け取るものがあります。例えば、Node の`fs.readFileSync`の第 2 引数は、いくつかの指定された文字列値しか取ることができません：`ascii`、`utf8`などです。他のいくつかの関数は、VS Code API の`createStatusBarItem`関数のように、`alignment`は引数は指定された整数値 [`1` また `2`](https://github.com/Microsoft/vscode/blob/2362ec665c84a1519162b50c36ed4f29d1e20f62/src/vs/vscode.d.ts#L4098-L4109)のみ取ることができます。
 
-One could still type these parameters as just `string` or `int`, but this would
-not prevent consumers of the external function from calling it using values that
-are unsupported by the JavaScript function. Let’s see how we can use polymorphic
-variants to avoid runtime errors.
+これらの引数を単なる`string`や`int`として型付けすることはできますが、JavaScript 関数がサポートしていない値を使って external 関数を呼び出すことを防ぐことはできません。多相 Variant を使って実行時エラーを回避する方法を見てみましょう。
 
-If the values are strings, we can use the `mel.string` attribute:
+値が文字列の場合、`mel.string` attribute を使用することができます：
 
 ```ocaml
 external read_file_sync :
@@ -1861,15 +1760,14 @@ external read_file_sync:
 let _ = read_file_sync(~name="xx.txt", `ascii);
 ```
 
-Which generates:
+以下のように JavaScript を生成します:
 
 ```js
 var Fs = require('fs')
 Fs.readFileSync('xx.txt', 'ascii')
 ```
 
-This technique can be combined with the `mel.as` attribute to modify the strings
-produced from the polymorphic variant values. For example:
+このテクニックを `mel.as` attribute と組み合わせることで、多相 Variant 値から生成される文字列を変更することができます。例えば：
 
 ```ocaml
 type document
@@ -1921,7 +1819,7 @@ let element_style = style(get_by_id(document, "my-id"));
 let () = transition_timing_function(element_style, `easeIn);
 ```
 
-This will generate:
+以下のような JavaScript を生成します：
 
 ```javascript
 var element_style = document.getElementById('my-id').style
@@ -1929,8 +1827,7 @@ var element_style = document.getElementById('my-id').style
 element_style.transitionTimingFunction = 'ease-in'
 ```
 
-Aside from producing string values, Melange also offers `mel.int` to produce
-integer values. `mel.int` can also be combined with `mel.as`:
+Melange は文字列値を生成する以外に、整数値を生成する`mel.int`も提供しています。`mel.int`は`mel.as`と組み合わせることもできます：
 
 ```ocaml
 external test_int_type :
@@ -1948,12 +1845,9 @@ external test_int_type:
 let value = test_int_type(`on_open);
 ```
 
-In this example, `on_closed` will be encoded as 0, `on_open` will be 20 due to
-the attribute `mel.as` and `in_bin` will be 21, because if no `mel.as`
-annotation is provided for a variant tag, the compiler continues assigning
-values counting up from the previous one.
+この例では、`on_closed`は 0 としてエンコードされ、`on_open`は attribute `mel.as`により 20 となり、`in_bin`は 21 となります。なぜなら、Variant タグに`mel.as`アノテーションが与えられていない場合、コンパイラは前の値からカウントアップして値を割り当て続けるからです。
 
-This code generates:
+以下のような JavaScript を生成します：
 
 ```js
 var value = testIntType(20)
@@ -1961,8 +1855,7 @@ var value = testIntType(20)
 
 ### Using polymorphic variants to bind to event listeners
 
-Polymorphic variants can also be used to wrap event listeners, or any other kind
-of callback, for example:
+Polymorphic Variant は、イベントリスナーや他の種類のコールバックなどをラップするためにも使うことができます：
 
 ```ocaml
 type readline
@@ -1993,7 +1886,7 @@ let register = rl =>
   rl->(on(`close(event => ())))->(on(`line(line => Js.log(line))));
 ```
 
-This generates:
+以下のような JavaScript を生成します：
 
 ```js
 function register(rl) {
@@ -2007,9 +1900,7 @@ function register(rl) {
 
 ### Constant values as arguments
 
-Sometimes we want to call a JavaScript function and make sure one of the
-arguments is always constant. For this, the `[@mel.as]` attribute can be
-combined with the wildcard pattern `_`:
+JavaScript の関数を呼び出して、引数の 1 つが常に一定であることを確認したいことがあります。この場合、`[@mel.as]` attribute とワイルドカードパターン `_` を組み合わせます：
 
 ```ocaml
 external process_on_exit : (_[@mel.as "exit"]) -> (int -> unit) -> unit
@@ -2030,7 +1921,7 @@ let () =
   );
 ```
 
-This generates:
+以下のような JavaScript を生成します：
 
 ```js
 process.on('exit', function (exitCode) {
@@ -2038,16 +1929,13 @@ process.on('exit', function (exitCode) {
 })
 ```
 
-The `mel.as "exit"` and the wildcard `_` pattern together will tell Melange to
-compile the first argument of the JavaScript function to the string `"exit"`.
+`mel.as "exit"`とワイルドカードの`_`パターンを組み合わせると、Melange は JavaScript 関数の第 1 引数を`"exit"`という文字列にコンパイルするように指示します。
 
-You can also use any JSON literal by passing a quoted string to `mel.as`:
-`mel.as {json|true|json}` or `mel.as {json|{"name": "John"}|json}`.
+次のように`mel.as`引用符で囲まれた文字列を渡すことで、任意の JSON リテラルを使用することもできます： `mel.as {json|true|json}` または `mel.as {json|{"name"："John"}|json}`
 
 ### Binding to callbacks
 
-In OCaml, all functions have arity 1. This means that if you define a function
-like this:
+OCaml では、すべての関数がとる引数の数（アリティ）は 1 です。つまり、次のような関数を定義すると、アリティは 1 になります：
 
 ```ocaml
 let add x y = x + y
@@ -2057,17 +1945,9 @@ let add x y = x + y
 let add = (x, y) => x + y;
 ```
 
-Its type will be `int -> int -> int`. This means that one can partially apply
-`add` by calling `add 1`, which will return another function expecting the
-second argument of the addition. This kind of functions are called "curried"
-functions, more information about currying in OCaml can be found in [this
-chapter](https://cs3110.github.io/textbook/chapters/hop/currying.html) of the
-"OCaml Programming: Correct + Efficient + Beautiful" book.
+この関数の型は`int -> int -> int`となります。これは、`add 1`を呼び出すことで`add`を部分的に適用できることを意味し、`add 1`は加算の第 2 引数を期待する別の関数を返します。このような関数は "curried" 関数と呼ばれ、OCaml の currying に関する詳細は "OCaml Programming: Correct + Efficient + Beautiful"の[この章](https://cs3110.github.io/textbook/chapters/hop/currying.html)を参照してください。
 
-This is incompatible with how function calling conventions work in JavaScript,
-where all function calls always apply all the arguments. To continue the
-example, let’s say we have an `add` function implemented in JavaScript, similar
-to the one above:
+これは、すべての関数呼び出しが常にすべての引数を適用するという、JavaScript における関数呼び出しの規約とは相容れないものです。例の続きとして、JavaScript に上のような`add`関数が実装されているとしましょう：
 
 ```javascript
 var add = function (a, b) {
@@ -2075,12 +1955,9 @@ var add = function (a, b) {
 }
 ```
 
-If we call `add(1)`, the function will be totally applied, with `b` having
-`undefined` value. And as JavaScript will try to add `1` with `undefined`, we
-will get `NaN` as a result.
+`add(1)`を呼び出すと、関数は完全に適用され、`b`の値は`undefined`になります。そして、JavaScript は`1`と`undefined`の値を足そうとするので、結果として`NaN`を得ることになります。
 
-To illustrate this difference and how it affects Melange bindings, let’s say we
-want to write bindings for a JavaScript function like this:
+この違いと Melange バインディングへの影響を説明するために、JavaScript 関数のバインディングを次のように書いてみましょう：
 
 ```javascript
 function map(a, b, f) {
@@ -2093,7 +1970,7 @@ function map(a, b, f) {
 }
 ```
 
-A naive external function declaration could be as below:
+素朴な external 関数宣言は以下のようになります：
 
 ```ocaml
 external map : 'a array -> 'b array -> ('a -> 'b -> 'c) -> 'c array = "map"
@@ -2103,12 +1980,9 @@ external map : 'a array -> 'b array -> ('a -> 'b -> 'c) -> 'c array = "map"
 external map: (array('a), array('b), ('a, 'b) => 'c) => array('c) = "map";
 ```
 
-Unfortunately, this is not completely correct. The issue is in the callback
-function, with type `'a -> 'b -> 'c`. This means that `map` will expect a
-function like `add` described above. But as we said, in OCaml, having two
-arguments means just to have two functions that take one argument.
+残念ながら、これは完全には正しくありません。問題はコールバック関数にあり、型は`'a -> 'b -> 'c`です。つまり、`map`は上記の`add`のような関数を期待することになります。しかし、OCaml では、2 つの引数を持つということは、1 つの引数を取る関数を 2 つ持つということなのです。
 
-Let’s rewrite `add` to make the problem a bit more clear:
+問題をもう少し明確にするために、`add`を書き換えてみましょう：
 
 ```ocaml
 let add x = let partial y = x + y in partial
@@ -2121,7 +1995,7 @@ let add = x => {
 };
 ```
 
-This will be compiled to:
+以下のようにコンパイルされます：
 
 ```javascript
 function add(x) {
@@ -2131,25 +2005,13 @@ function add(x) {
 }
 ```
 
-Now if we ever used our external function `map` with our `add` function by
-calling `map arr1 arr2 add` it would not work as expected. JavaScript function
-application does not work the same as in OCaml, so the function call in the
-`map` implementation, `f(a[i],b[i])`, would be applied over the outer JavaScript
-function `add`, which only takes one argument `x`, and `b[i]` would be just
-discarded. The value returned from the operation would not be the addition of
-the two numbers, but rather the inner anonymous callback.
+ここで、もし external 関数`map`を`map arr1 arr2 add`と呼んで`add`関数と一緒に使ったら、期待通りには動かないでしょう。JavaScript の関数の適用は OCaml と同じようにはいかないので、`map`実装の関数呼び出し、`f(a[i],b[i])`は、引数`x`を 1 つしか取らない JavaScript の外部関数`add`に適用され、`b[i]`は捨てられるだけです。この操作から返される値は、2 つの数値の加算ではなく、内側の匿名コールバックとなります。
 
-To solve this mismatch between OCaml and JavaScript functions and their
-application, Melange provides a special attribute `@u` that can be used to
-annotate external functions that need to be "uncurried".
+OCaml と JavaScript の関数とそのアプリケーションの間のこのミスマッチを解決するために、Melange は「uncurried」である必要がある外部関数をアノテートするために使用できる特別な attribute `@u`を提供しています。
 
-<span class="text-reasonml">In Reason syntax, this attribute does not need to be
-written explicitly, as it is deeply integrated with the Reason parser. To
-specify some function type as "uncurried", one just needs to add the dot
-character `.` to the function type. For example, `(. 'a, 'b) => 'c` instead of
-`('a, 'b) => 'c`.</span>
+Reason 構文では、Reaon のパーサーと深く連携しているため、この attribute は明示的に書く必要はありません。"uncurried"として関数をマークしたい場合、関数の型に`.`を追加します。`('a, 'b) => 'c`の代わりに`(. 'a, 'b) => 'c`と書きます。
 
-In the example above:
+上の例では：
 
 ```ocaml
 external map : 'a array -> 'b array -> (('a -> 'b -> 'c)[@u]) -> 'c array
@@ -2160,14 +2022,9 @@ external map : 'a array -> 'b array -> (('a -> 'b -> 'c)[@u]) -> 'c array
 external map: (array('a), array('b), (. 'a, 'b) => 'c) => array('c) = "map";
 ```
 
-Here <span class="text-ocaml">`('a -> 'b -> 'c [@u])`</span><span
-class="text-reasonml">`(. 'a, 'b) => 'c`</span>will be interpreted as having
-arity 2. In general, <span class="text-ocaml">`'a0 -> 'a1 ...​ 'aN -> 'b0 [@u]`
-is the same as `'a0 -> 'a1 ...​ 'aN -> 'b0`</span><span class="text-reasonml">`.
-'a0, 'a1, ...​ 'aN => 'b0` is the same as `'a0, 'a1, ...​ 'aN => 'b0`</span>
-except the former’s arity is guaranteed to be N while the latter is unknown.
+ここで`('a -> 'b -> 'c [@u])`（Reason: `(. 'a, 'b) => 'c`）はアリティ 2 であると解釈されます。一般に、`'a0 -> 'a1 ... 'aN -> 'b0 [@u]`は`'a0 -> 'a1 ... 'aN -> 'b0`と同じですが、前者はアリティが N であることが保証されているのに対し、後者は未知です。
 
-If we try now to call `map` using `add`:
+`add`を使って`map`を呼び出そうとすると、次のようになります：
 
 ```ocaml
 let add x y = x + y
@@ -2179,7 +2036,7 @@ let add = (x, y) => x + y;
 let _ = map([||], [||], add);
 ```
 
-We will get an error:
+以下ようなエラーが起こります：
 
 ```text
 let _ = map [||] [||] add
@@ -2188,8 +2045,7 @@ This expression has type int -> int -> int
 but an expression was expected of type ('a -> 'b -> 'c) Js.Fn.arity2
 ```
 
-To solve this, we add <span class="text-ocaml">`@u`</span><span
-class="text-reasonml">`.`</span> in the function definition as well:
+これを解決するために、関数定義にも`@u`（Reason: `.`）を追加します：
 
 ```ocaml
 let add = fun [@u] x y -> x + y
@@ -2199,14 +2055,11 @@ let add = fun [@u] x y -> x + y
 let add = (. x, y) => x + y;
 ```
 
-Annotating function definitions can be quite cumbersome when writing a lot of
-externals.
+たくさんの external 関数を書く場合、関数定義の注釈はかなり面倒になります。
 
-To work around the verbosity, Melange offers another attribute called
-`mel.uncurry`.
+この冗長さを回避するために、Melange は`mel.uncurry`という別の attribute を提供しています。
 
-Let’s see how we could use it in the previous example. We just need to replace
-`u` with `mel.uncurry`:
+先ほどの例でどのように使えるか見てみましょう。`u`を`mel.uncurry`に置き換えるだけです：
 
 ```ocaml
 external map :
@@ -2219,7 +2072,7 @@ external map:
   "map";
 ```
 
-Now if we try to call `map` with a regular `add` function:
+通常の`add`関数で`map`を呼び出そうとすると、次のようになります：
 
 ```ocaml
 let add x y = x + y
@@ -2231,19 +2084,13 @@ let add = (x, y) => x + y;
 let _ = map([||], [||], add);
 ```
 
-Everything works fine now, without having to attach any attributes to `add`.
+追加する attribute を追加することなく、すべてがうまく機能するようになりました。
 
-The main difference between `u` and `mel.uncurry` is that the latter only works
-with externals. `mel.uncurry` is the recommended option to use for bindings,
-while `u` remains useful for those use cases where performance is crucial and we
-want the JavaScript functions generated from OCaml ones to not be applied
-partially.
+`u`と`mel.uncurry`の主な違いは、後者が external のみで動作することです。`mel.uncurry`はバインディングに使用する推奨オプションであり、`u`はパフォーマンスが重要で、OCaml の関数から生成された JavaScript 関数を部分的に適用しないようにしたい場合に有用です。
 
 ### Modeling `this`\-based Callbacks
 
-Many JavaScript libraries have callbacks which rely on the [`this`
-keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this),
-for example:
+多くの JavaScript ライブラリには、例えば[`this`キーワード](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this)に依存するコールバックがあります：
 
 ```js
 x.onload = function (v) {
@@ -2251,9 +2098,7 @@ x.onload = function (v) {
 }
 ```
 
-Inside the `x.onload` callback, `this` would be pointing to `x`. It would not be
-correct to declare `x.onload` of type `unit -> unit`. Instead, Melange
-introduces a special attribute, `mel.this`, which allows to type `x` as this:
+`x.onload`コールバックの内部では、`this`は`x`を指していることになります。`x.onload`を`unit -> unit`型で宣言するのは正しくありません。その代わりに、Melange は特別な属性`mel.this`を導入しています：
 
 ```ocaml
 type x
@@ -2277,7 +2122,7 @@ external set_onload: (x, [@mel.this] ((x, int) => unit)) => unit = "onload";
 let _ = set_onload(x, [@mel.this] (o, v) => Js.log(resp(o) + v));
 ```
 
-Which generates:
+以下のような JavaScript を生成します：
 
 ```javascript
 x.onload = function (v) {
@@ -2286,19 +2131,13 @@ x.onload = function (v) {
 }
 ```
 
-Note that the first argument will be reserved for `this`.
+第 1 引数は`this`ために予約されることに注意してください。
 
 ### Wrapping returned nullable values
 
-JavaScript models `null` and `undefined` differently, whereas it can be useful
-to treat both as <span class="text-ocaml">`'a option`</span><span
-class="text-reasonml">`option('a)`</span> in Melange.
+JavaScript では`null`と`undefined`は異なるモデルで扱われますが、Melange ではどちらも`'a option`（Reason: `option('a)`）として扱うと便利です。
 
-Melange understands the `mel.return` attribute in externals to model how
-nullable return types should be wrapped at the bindings boundary. An `external`
-value with `mel.return` converts the return value to an `option` type, avoiding
-the need for extra wrapping / unwrapping with functions such as
-`Js.Nullable.toOption`.
+Melange は null になり得る戻り値の型をバインディング境界でどのようにラップするかをモデル化するために、external の値`mel.return` attribute を認識します。`mel.return`を持つ`external`値は戻り値を`option`型に変換し、`Js.Nullable.toOption`のような関数による余分なラッピング/アンラッピングの必要性を回避します。
 
 ```ocaml
 type element
@@ -2328,7 +2167,7 @@ let test = document => {
 };
 ```
 
-Which generates:
+以下のような JavaScript を生成します：
 
 ```js
 function test($$document) {
@@ -2341,38 +2180,25 @@ function test($$document) {
 }
 ```
 
-The `mel.return` attribute takes an attribute payload, as seen with <span
-class="text-ocaml">`[@@mel.return nullable]`</span><span
-class="text-reasonml">`[@mel.return nullable]`</span> above. Currently 4
-directives are supported: `null_to_opt`, `undefined_to_opt`, `nullable` and
-`identity`.
+上の`[@mel.return nullable]`（Reason: `[@mel.return nullable]`）のように、`mel.return` attribute は attribute ペイロードを取ります。現在、`null_to_opt`、`undefined_to_opt`、`nullable`、`identity`の 4 つのディレクティブがサポートされています。
 
-`nullable` is encouraged, as it will convert from `null` and `undefined` to
-`option` type.
+`nullable`は、`null`や`undefined`を`option`型に変換するので、推奨されます。
 
 <!-- When the return type is unit: the compiler will append its return value with an OCaml unit literal to make sure it does return unit. Its main purpose is to make the user consume FFI in idiomatic OCaml code, the cost is very very small and the compiler will do smart optimizations to remove it when the returned value is not used (mostly likely). -->
 
-`identity` will make sure that compiler will do nothing about the returned
-value. It is rarely used, but introduced here for debugging purposes.
+`identity`は、コンパイラが戻り値に対して何もしないようにします。これはほとんど使われませんが、デバッグのために紹介します。
 
 ## Generate getters, setters and constructors
 
-As we saw in a [previous section](#non-shared-data-types), there are some types
-in Melange that compile to values that are not easy to manipulate from
-JavaScript. To facilitate the communication from JavaScript code with values of
-these types, Melange includes an attribute `deriving` that helps generating
-conversion functions, as well as functions to create values from these types. In
-particular, for variants and polymorphic variants.
+[前のセクション](#non-shared-data-types)で見たように、Melange には JavaScript から操作するのが簡単ではない値にコンパイルされる型があります。このような型の値と JavaScript コードからの通信を容易にするために、Melange には変換関数を生成するのに役立つ`deriving` attribute と、これらの型から値を生成する関数が含まれています。特に、Variant と polymorphic variants についてです。
 
-Additionally, `deriving` can be used with record types, to generate setters and
-getters as well as creation functions.
+さらに、`deriving`はレコード型で使用することができ、setter や getter、作成関数を生成することができます。
 
 ### Variants
 
 #### Creating values
 
-Use `@deriving accessors` on a variant type to create constructor values for
-each branch.
+Variant 型の `@deriving` アクセサを使用して、各ブランチのコンストラクタ値を作成します。
 
 ```ocaml
 type action =
@@ -2390,16 +2216,11 @@ type action =
   | Cancel;
 ```
 
-Melange will generate one `let` definition for each variant tag, implemented as
-follows:
+Melange は各 Variant タグに 1 つの`let`定義を生成し、以下のように実装します：
 
-- For variant tags with payloads, it will be a function that takes the payload
-  value as a parameter.
-- For variant tags without payloads, it will be a constant with the runtime
-  value of the tag.
-
-Given the `action` type definition above, annotated with `deriving`, Melange
-will generate something similar to the following code:
+- ペイロードを持つ Variant タグでは、ペイロード値をパラメータとする関数になります
+- ペイロードを持たない Variant タグでは、タグの実行時の値を持つ定数になります
+- 上記のアクションタイプ定義に`deriving`のアノテーションを付けると、Melange は以下のようなコードを生成します：
 
 ```ocaml
 type action =
@@ -2423,7 +2244,7 @@ let submit = (param): action => Submit(param);
 let cancel: action = Cancel;
 ```
 
-Which will result in the following JavaScript code after compilation:
+コンパイル後の JavaScript コードは以下のようになります：
 
 ```javascript
 function submit(param_0) {
@@ -2437,9 +2258,7 @@ var click = /* Click */ 0
 var cancel = /* Cancel */ 1
 ```
 
-Note the generated definitions are lower-cased, and they can be safely used from
-JavaScript code. For example, if the above JavaScript generated code was located
-in a `generators.js` file, the definitions can be used like this:
+生成された定義は小文字であり、JavaScript コードから安全に使用できることに注意してください。例えば、上記の JavaScript で生成されたコードが`generators.js`ファイルにあった場合、定義は次のように使うことができます：
 
 ```javascript
 const generators = require('./generators.js')
@@ -2450,20 +2269,15 @@ const click = generators.click
 
 #### Conversion functions
 
-Use `@deriving jsConverter` on a variant type to create converter functions that
-allow to transform back and forth between JavaScript integers and Melange
-variant values.
+Variant 型で `@deriving jsConverter` を使うと、JavaScript の整数と Melange の Variant 値を行き来できるコンバータ関数を作成できます。
 
-There are a few differences with `@deriving accessors`:
+`@deriving accessors`にはいくつかの違いがあります：
 
-- `jsConverter` works with the `mel.as` attribute, while `accessors` does not
-- `jsConverter` does not support variant tags with payload, while `accessors`
-  does
-- `jsConverter` generates functions to transform values back and forth, while
-  `accessors` generates functions to create values
+- `jsConverter`は `mel.as` attribute と連動しますが、`accessors` は連動しません
+- `jsConverter`はペイロードを持つ Variant タグをサポートしていません
+- `jsConverter`は値を前後に変換する関数を生成するが、`accessors`は値を生成する関数を生成します
 
-Let’s see a version of the previous example, adapted to work with `jsConverter`
-given the constraints above:
+上記の制約を考慮した上で、jsConverter で動作するように適合させた前の例のバージョンを見てみましょう：
 
 ```ocaml
 type action =
@@ -2481,7 +2295,7 @@ type action =
   | Cancel;
 ```
 
-This will generate a couple of functions with the following types:
+これにより、以下の型の関数がいくつか生成されます：
 
 ```ocaml
 val actionToJs : action -> int
@@ -2495,19 +2309,13 @@ external actionToJs: action => int = ;
 external actionFromJs: int => option(action) = ;
 ```
 
-`actionToJs` returns integers from values of `action` type. It will start with 0
-for `Click`, 3 for `Submit` (because it was annotated with `mel.as`), and then 4
-for `Cancel`, in the same way that we described when [using `mel.int` with
-polymorphic variants](#using-polymorphic-variants-to-bind-to-enums).
+`actionToJs`は`action`型の値から整数を返します。これは、多相 Variant で`mel.int`を使うときに説明したのと同じ方法で、`Click`は 0 から始まり、`Submit`は 3（`mel.as`でアノテーションされているため）、そして`Cancel`は 4 となります。
 
-`actionFromJs` returns a value of type `option`, because not every integer can
-be converted into a variant tag of the `action` type.
+`actionFromJs`は`option`型の値を返しますが、これはすべての整数が`action`型の Variant タグに変換できるわけではないからです。
 
 ##### Hide runtime types
 
-For extra type safety, we can hide the runtime representation of variants
-(`int`) from the generated functions, by using `jsConverter { newType }` payload
-with `@deriving`:
+型安全性を高めるために、`jsConverter { newType }`のペイロードを`@deriving`で使用することで、生成される関数から Variant（`int`）の実行時表現を隠すことができます：
 
 ```ocaml
 type action =
@@ -2525,8 +2333,7 @@ type action =
   | Cancel;
 ```
 
-This feature relies on [abstract types](#abstract-types) to hide the JavaScript
-runtime representation. It will generate functions with the following types:
+この機能は、JavaScript の実行時表現を隠すために[抽象型](#abstract-types)に依存しています。以下の型を持つ関数を生成します：
 
 ```ocaml
 val actionToJs : action -> abs_action
@@ -2540,21 +2347,15 @@ external actionToJs: action => abs_action = ;
 external actionFromJs: abs_action => action = ;
 ```
 
-In the case of `actionFromJs`, the return value, unlike the previous case, is
-not an option type. This is an example of "correct by construction": the only
-way to create an `abs_action` is by calling the `actionToJs` function.
+`actionFromJs`の場合、前のケースとは異なり、戻り値は`option`型ではありません。これは "correct by construction"の例であり、`abs_action`を作成する唯一の方法は`actionToJs`関数を呼び出すことです。
 
 ### Polymorphic variants
 
-The `@deriving jsConverter` attribute is applicable to polymorphic variants as
-well.
+`@deriving jsConverter` attribute は多相 Variant にも適用できます。
 
-> **_NOTE:_** Similarly to variants, the `@deriving jsConverter` attribute
-> cannot be used when the polymorphic variant tags have payloads. Refer to the
-> [section on runtime representation](#data-types-and-runtime-representation) to
-> learn more about how polymorphic variants are represented in JavaScript.
+> **_NOTE:_** Variant と同様に、`@deriving jsConverter` attribute は Polymorphic Variant タグがペイロードを持っているときは使えません。JavaScript で多相 Variant がどのように表現されるかについては、[実行時の表現](#data-types-and-runtime-representation)のセクションを参照してください。
 
-Let’s see an example:
+例を見てみましょう：
 
 ```ocaml
 type action =
@@ -2570,7 +2371,7 @@ type action =
 type action = [ | `Click | [@mel.as "submit"] `Submit | `Cancel];
 ```
 
-Akin to the variant example, the following two functions will be generated:
+Variant の例と同様に、以下の 2 つの関数が生成されます：
 
 ```ocaml
 val actionToJs : action -> string
@@ -2584,15 +2385,13 @@ external actionToJs: action => string = ;
 external actionFromJs: string => option(action) = ;
 ```
 
-The `jsConverter { newType }` payload can also be used with polymorphic
-variants.
+`jsConverter { newType }` ペイロードは多相 Variant でも使用できます。
 
 ### Records
 
 #### Accessing fields
 
-Use `@deriving accessors` on a record type to create accessor functions for its
-record field names.
+レコード型の`@deriving accessors`を使用して、レコード・フィールド名のアクセサ関数を作成します。
 
 ```ocaml
 type pet = { name : string } [@@deriving accessors]
@@ -2611,9 +2410,7 @@ let pets = [|{name: "Brutus"}, {name: "Mochi"}|];
 let () = pets->(Belt.Array.map(name))->(Js.Array.join(~sep="&"))->Js.log;
 ```
 
-Melange will generate a function for each field defined in the record. In this
-case, a function `name` that allows to get that field from any record of type
-`pet`:
+Melange はレコードに定義されたフィールドごとに関数を生成します。この場合、`pet`型のレコードからそのフィールドを取得できる関数 `name`となります：
 
 <!--#prelude#type pet = { name : string } [@@deriving accessors]-->
 
@@ -2625,7 +2422,7 @@ let name (param : pet) = param.name
 let name = (param: pet) => param.name;
 ```
 
-Considering all the above, the produced JavaScript will be:
+以上のことを考慮すると、出来上がる JavaScript はこうなります：
 
 ```js
 function name(param) {
