@@ -393,7 +393,7 @@ Melange の各型は以下のように JavaScript の値に変換されます：
 | variant | 以下を参照 |
 | polymorphic variant | 以下を参照 |
 
-単一の非 null コンストラクタを持つバリアント：
+単一の非 `null` コンストラクタを持つバリアント：
 
 ```ocaml
 type tree = Leaf | Node of int * tree * tree
@@ -443,16 +443,11 @@ let v = `Foo(2); /* { NAME: "Foo", VAL: "2" } */
 
 ### Shared types
 
-The following are types that can be shared between Melange and JavaScript almost
-"as is". Specific caveats are mentioned on the sections where they apply.
+以下は、Melange と JavaScript の間でほぼ「そのまま」共有できる型です。具体的な注意点は、該当するセクションに記載しています。
 
 #### Strings
 
-JavaScript strings are immutable sequences of UTF-16 encoded Unicode text. OCaml
-strings are immutable sequences of bytes and nowadays assumed to be UTF-8
-encoded text when interpreted as textual content. This is problematic when
-interacting with JavaScript code, because if one tries to use some unicode
-characters, like:
+JavaScript の文字列は、UTF-16 でエンコードされた Unicode テキストの不変なシーケンスです。OCaml の文字列は不変のバイト列であり、テキストコンテンツとして解釈される場合、最近では UTF-8 でエンコードされたテキストであると仮定されます。これは JavaScript コードとやりとりする際に問題となります：
 
 ```ocaml
 let () = Js.log "你好"
@@ -462,10 +457,7 @@ let () = Js.log "你好"
 let () = Js.log("你好");
 ```
 
-It will lead to some cryptic console output. To rectify this, Melange allows to
-define [quoted string
-literals](https://v2.ocaml.org/manual/lex.html#sss:stringliterals) using the
-`js` identifier, for example:
+これは、不可解なコンソール出力につながります。これを修正するために、Melange では`js`識別子を使って[引用符付きの文字列リテラル](https://v2.ocaml.org/manual/lex.html#sss:stringliterals)を定義できます：
 
 ```ocaml
 let () = Js.log {js|你好，
@@ -477,9 +469,7 @@ let () = Js.log({js|你好，
 世界|js});
 ```
 
-For convenience, Melange exposes another special quoted string identifier: `j`.
-It is similar to JavaScript’ string interpolation, but for variables only (not
-arbitrary expressions):
+これは JavaScript の文字列補間に似ていますが、変数にのみ適用されます（任意の式には適用されません）：
 
 ```ocaml
 let world = {j|世界|j}
@@ -491,90 +481,35 @@ let world = {j|世界|j};
 let helloWorld = {j|你好，$world|j};
 ```
 
-You can surround the interpolation variable in parentheses too: `{j|你
-好，$(world)|j}`.
+補間変数を括弧で囲むこともできます： `{j|你 好，$(world)|j}`
 
-To work with strings, the Melange standard library provides some utilities in
-the <a class="text-ocaml"
-href="../api/ml/melange/Stdlib/String"><code>Stdlib.String</code> module</a><a
-class="text-reasonml"
-href="../api/re/melange/Stdlib/String"><code>Stdlib.String</code> module</a>.
-The bindings to the native JavaScript functions to work with strings are in the
-<a class="text-ocaml" href="../api/ml/melange/Js/String"><code>Js.String</code>
-module</a><a class="text-reasonml"
-href="../api/re/melange/Js/String"><code>Js.String</code> module</a>.
+文字列を扱うために、Melange 標準ライブラリは`Stdlib.String`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Stdlib/String) / [Reason](https://melange.re/v2.2.0/api/re/melange/Stdlib/String)）でいくつかのユーティリティを提供しています。文字列を扱うための JavaScript ネイティブ関数へのバインディングは、`Js.String モジュール`（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/String) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/String)）にあります。
 
 #### Floating-point numbers
 
-OCaml floats are [IEEE
-754](https://en.wikipedia.org/wiki/Double-precision_floating-point_format#IEEE_754_double-precision_binary_floating-point_format:_binary64)
-with a 53-bit mantissa and exponents from -1022 to 1023. This happens to be the
-same encoding as [JavaScript
-numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number#number_encoding),
-so values of these types can be used transparently between Melange code and
-JavaScript code. The Melange standard library provides a <a class="text-ocaml"
-href="../api/ml/melange/Stdlib/Float"><code>Stdlib.Float</code> module</a><a
-class="text-reasonml"
-href="../api/re/melange/Stdlib/Float"><code>Stdlib.Float</code> module</a>. The
-bindings to the JavaScript APIs that manipulate float values can be found in the
-<a class="text-ocaml" href="../api/ml/melange/Js/Float"><code>Js.Float</code>
-module</a><a class="text-reasonml"
-href="../api/re/melange/Js/Float"><code>Js.Float</code> module</a>.
+OCaml の浮動小数点数は[IEEE 754](https://en.wikipedia.org/wiki/Double-precision_floating-point_format#IEEE_754_double-precision_binary_floating-point_format:_binary64)で、仮数は 53 ビット、指数は-1022 ～ 1023 です。これは[JavaScript の数値](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number#number_encoding)と同じエンコーディングであるため、これらの型の値は Melange コードと JavaScript コードの間で透過的に使用できます。Melange 標準ライブラリは`Stdlib.Float` モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Stdlib/Float) / [Reason](https://melange.re/v2.2.0/api/re/melange/Stdlib/Float)）を提供しています。浮動小数点値を操作する JavaScript API へのバインディングは、`Js.Float`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Float) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Float)）にあります。
 
 #### Integers
 
-In Melange, integers are limited to 32 bits due to the [fixed-width
-conversion](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number#fixed-width_number_conversion)
-of bitwise operations in JavaScript. While Melange integers compile to
-JavaScript numbers, treating them interchangeably can result in unexpected
-behavior due to differences in precision. Even though bitwise operations in
-JavaScript are constrained to 32 bits, integers themselves are represented using
-the same floating-point format [as
-numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number#number_encoding),
-allowing for a larger range of representable integers in JavaScript compared to
-Melange. When dealing with large numbers, it is advisable to use floats instead.
-For instance, floats are used in bindings like `Js.Date`.
+Melange では、JavaScript のビット演算の[固定幅変換]()のため、整数は 32 ビットに制限されています。Melange の整数は JavaScript の数値にコンパイルされますが、これらを互換的に扱うと、精度の違いにより予期せぬ動作になる可能性があります。JavaScript のビット演算は 32 ビットに制限されていますが、整数自体は[数値と同じ](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number#number_encoding)浮動小数点フォーマットを使って表現されるため、Melange に比べて JavaScript で表現可能な整数の範囲が広くなっています。大きな数値を扱う場合は、代わりに浮動小数点を使うことが推奨されます。例えば、`Js.Date`のようなバインディングでは float が使われます。
 
-The Melange standard library provides a <a class="text-ocaml"
-href="../api/ml/melange/Stdlib/Int"><code>Stdlib.Int</code> module</a><a
-class="text-reasonml"
-href="../api/re/melange/Stdlib/Int"><code>Stdlib.Int</code> module</a>. The
-bindings to work with JavaScript integers are in the <a class="text-ocaml"
-href="../api/ml/melange/Js/Int"><code>Js.Int</code> module</a><a
-class="text-reasonml" href="../api/re/melange/Js/Int"><code>Js.Int</code>
-module</a>.
+Melange 標準ライブラリには`Stdlib.Int`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Stdlib/Int) / [Reason](https://melange.re/v2.2.0/api/re/melange/Stdlib/Int)）が用意されています。JavaScript の整数を扱うバインディングは`Js.Int`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Int) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Int)）にあります。
 
 #### Arrays
 
-Melange arrays compile to JavaScript arrays. But note that unlike JavaScript
-arrays, all the values in a Melange array need to have the same type.
+Melange の配列は JavaScript の配列にコンパイルされます。しかし JavaScript の配列とは異なり、Melange 配列のすべての値は同じ型である必要があることに注意してください。
 
-Another difference is that OCaml arrays are fixed-sized, but on Melange side
-this constraint is relaxed. You can change an array’s length using functions
-like `Js.Array.push`, available in the bindings to the JavaScript APIs in the <a
-class="text-ocaml" href="../api/ml/melange/Js/Array"><code>Js.Array</code>
-module</a><a class="text-reasonml"
-href="../api/re/melange/Js/Array"><code>Js.Array</code> module</a>.
+もう 1 つの違いは、OCaml の配列は固定サイズですが、Melange 側ではこの制約が緩和されていることです。配列の長さを変更するには、`Js.Array.push`などの関数を使用します。`Js.Array`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Array) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Array)）の JavaScript API バインディングで使用できます。
 
-Melange standard library also has a module to work with arrays, available in the
-<a class="text-ocaml"
-href="../api/ml/melange/Stdlib/Array"><code>Stdlib.Array</code> module</a><a
-class="text-reasonml"
-href="../api/re/melange/Stdlib/Array"><code>Stdlib.Array</code> module</a>.
+Melange の標準ライブラリにも配列を扱うモジュールがあり、`Stdlib.Array`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Stdlib/Array) / [Reason](https://melange.re/v2.2.0/api/re/melange/Stdlib/Array)）で利用できます。
 
 #### Tuples
 
-OCaml tuples are compiled to JavaScript arrays. This is convenient when writing
-bindings that will use a JavaScript array with heterogeneous values, but that
-happens to have a fixed length.
+OCaml のタプルは JavaScript の配列にコンパイルされます。これは、異種値を持つ JavaScript 配列を使用するバインディングを書くときに便利ですが、たまたま固定長でした。
 
-As a real world example of this can be found in
-[ReasonReact](https://github.com/reasonml/reason-react/), the Melange bindings
-for [React](https://react.dev/). In these bindings, component effects
-dependencies are represented as OCaml tuples, so they get compiled cleanly to
-JavaScript arrays by Melange.
+実際の例としては、[ReasonReact](https://github.com/reasonml/reason-react/)という[React](https://react.dev/)用の Melange バインディングがあります。このバインディングでは、コンポーネント効果の依存関係は OCaml タプルとして表現され、Melange によって JavaScript 配列にきれいにコンパイルされます。
 
-For example, some code like this:
+例えば、以下のようなコードです：
 
 ```ocaml
 let () = React.useEffect2 (fun () -> None) (foo, bar)
@@ -584,7 +519,7 @@ let () = React.useEffect2 (fun () -> None) (foo, bar)
 let () = React.useEffect2(() => None, (foo, bar));
 ```
 
-Will produce:
+このコードは以下のように JavaScript にコンパイルされます:
 
 ```javascript
 React.useEffect(function () {}, [foo, bar])
@@ -592,23 +527,19 @@ React.useEffect(function () {}, [foo, bar])
 
 #### Booleans
 
-Values of type `bool` compile to JavaScript booleans.
+`bool`型の値は JavaScript のブール値にコンパイルされます。
 
 #### Records
 
-Melange records map directly to JavaScript objects. If the record fields include
-non-shared data types (like variants), these values should be transformed
-separately, and not be directly used in JavaScript.
+Melange レコードは JavaScript オブジェクトに直接マッピングされます。レコードフィールドに非共有データ型（バリアントなど）が含まれている場合、これらの値は JavaScript で直接使用せず、別途変換する必要があります。
 
-Extensive documentation about interfacing with JavaScript objects using records
-can be found in [the section below](#bind-to-js-object).
+レコードを使用した JavaScript オブジェクトとのインターフェイスに関する広範なドキュメントは、[以下のセクション](#bind-to-javascript-objects)にあります。
 
 #### Regular expressions
 
-Regular expressions created using the `%mel.re` extension node compile to their
-JavaScript counterpart.
+`%mel.re`拡張ノードを使用して作成された正規表現は、JavaScript の対応するものにコンパイルされます。
 
-For example:
+例：
 
 ```ocaml
 let r = [%mel.re "/b/g"]
@@ -618,110 +549,67 @@ let r = [%mel.re "/b/g"]
 let r = [%mel.re "/b/g"];
 ```
 
-Will compile to:
+このコードは以下のように JavaScript にコンパイルされます:
 
 ```js
 var r = /b/g
 ```
 
-A regular expression like the above is of type `Js.Re.t`. The <a
-class="text-ocaml" href="../api/ml/melange/Js/Re"><code>Js.Re</code>
-module</a><a class="text-reasonml"
-href="../api/re/melange/Js/Re"><code>Js.Re</code> module</a> provides the
-bindings to the JavaScript functions that operate over regular expressions.
+上記のような正規表現は`Js.Re.t`型です。`Js.Re`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Re) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Re)）は、正規表現を操作する JavaScript 関数へのバインディングを提供します。
 
 ## Non-shared data types
 
-The following types differ too much between Melange and JavaScript, so while
-they can always be manipulated from JavaScript, it is recommended to transform
-them before doing so.
+以下の型は Melange と JavaScript で大きく異なるため、JavaScript から操作することは可能ですが、変換してから操作することが推奨されます。
 
-- Variants and polymorphic variants: Better transform them into readable
-  JavaScript values before manipulating them from JavaScript, Melange provides
-  [some helpers](#generate-getters-setters-and-constructors) to do so.
-- Exceptions
-- Option (a variant type): Better use the `Js.Nullable.fromOption` and
-  `Js.Nullable.toOption` functions in the <a class="text-ocaml"
-  href="../api/ml/melange/Js/Nullable"><code>Js.Nullable</code> module</a><a
-  class="text-reasonml"
-  href="../api/re/melange/Js/Nullable"><code>Js.Nullable</code> module</a> to
-  transform them into either `null` or `undefined` values.
-- List (also a variant type): use `Array.of_list` and `Array.to_list` in the <a
-  class="text-ocaml"
-  href="../api/ml/melange/Stdlib/Array"><code>Stdlib.Array</code> module</a><a
-  class="text-reasonml"
-  href="../api/re/melange/Stdlib/Array"><code>Stdlib.Array</code> module</a>.
+- Variants と Polymorphic variants：JavaScript から操作する前に、読みやすい JavaScript の値に変換しておくとよいでしょう。Melange では[いくつかのヘルパー](#generate-getters-setters-and-constructors)を用意しています
+- 例外
+- Option（Variant 型）：`Js.Nullable`モジュール（[OCaml](https://melange.re/v2.2.0/api/ml/melange/Js/Nullable) / [Reason](https://melange.re/v2.2.0/api/re/melange/Js/Nullable)）の`Js.Nullable.fromOption`関数と`Js.Nullable.toOption`関数を使用して、`null`または`undefined`値に変換する方が良いでしょう
+- List（Variant 型）：`Stdlib.Array`モジュール（[OCaml](https://melange.re/v2.2.0/api/re/melange/Stdlib/Array) / [Reason](https://melange.re/v2.2.0/api/re/melange/Stdlib/Array)）の`Array.of_list`と`Array.to_list`を使います
 - Character
 - Int64
-- Lazy values
+- Lazy な値
 
-## List of attributes and extension nodes
+## attributes と extension nodes のリスト
 
 **Attributes:**
 
-These attributes are used to annotate `external` definitions:
+これらの attributes は、`external`定義の注釈に使用されます：
 
-- [`mel.get`](#bind-to-object-properties): read JavaScript object properties
-  statically by name, using the dot notation `.`
-- [`mel.get_index`](#bind-to-object-properties): read a JavaScript object’s
-  properties dynamically by using the bracket notation `[]`
-- [`mel.module`](#using-functions-from-other-javascript-modules): bind to a
-  value from a JavaScript module
-- [`mel.new`](#javascript-classes): bind to a JavaScript class constructor
-- [`mel.obj`](#using-external-functions): create a JavaScript object
-- [`mel.return`](#wrapping-returned-nullable-values): automate conversion from
-  nullable values to `Option.t` values
-- [`mel.send`](#calling-an-object-method): call a JavaScript object method using
-  [pipe first](#pipe-first) convention
-- [`mel.send.pipe`](#calling-an-object-method): call a JavaScript object method
-  using [pipe last](#pipe-last) convention
-- [`mel.set`](#bind-to-object-properties): set JavaScript object properties
-  statically by name, using the dot notation `.`
-- [`mel.set_index`](#bind-to-object-properties): set JavaScript object
-  properties dynamically by using the bracket notation `[]`
-- [`mel.scope`](#binding-to-properties-inside-a-module-or-global): reach to
-  deeper properties inside a JavaScript object
-- [`mel.splice`](#variadic-function-arguments): a deprecated attribute, is an
-  alternate form of `mel.variadic`
-- [`mel.variadic`](#variadic-function-arguments): bind to a function taking
-  variadic arguments from an array
+- [`mel.get`](#bind-to-object-properties): JavaScript オブジェクトのプロパティを、`.` 記法を使って静的に名前から読み込む
+- [`mel.get_index`](#bind-to-object-properties): JavaScript オブジェクトのプロパティを`[]`括弧記法で動的に読み込む
+- [`mel.module`](#using-functions-from-other-javascript-modules): JavaScript モジュールの値にバインドする
+- [`mel.new`](#javascript-classes): JavaScript クラスのコンストラクタにバインドする
+- [`mel.obj`](#using-external-functions): JavaScript オブジェクトを作成する
+- [`mel.return`](#wrapping-returned-nullable-values): `null`可能な値から `Option.t` 値への自動変換
+- [`mel.send`](#calling-an-object-method): JavaScript オブジェクトのメソッドを Pipe first で呼び出す
+- [`mel.send.pipe`](#calling-an-object-method): JavaScript オブジェクトのメソッドを Pipe last で呼び出す
+- [`mel.set`](#bind-to-object-properties): JavaScript オブジェクトのプロパティを、`.`記法を使って静的にセットする
+- [`mel.set_index`](#bind-to-object-properties): JavaScript オブジェクトのプロパティを`[]`を使って動的に設定する
+- [`mel.scope`](#binding-to-properties-inside-a-module-or-global): JavaScript オブジェクト内部のより深いプロパティにアクセスする
+- [`mel.splice`](#variadic-function-arguments): 非推奨の属性で、`mel.variadic` の代替形式
+- [`mel.variadic`](#variadic-function-arguments): 配列から多様な引数を取る関数にバインドする
 
-These attributes are used to annotate arguments in `external` definitions:
+これらの attributes は、`external`定義における引数の注釈に使用されます：
 
-- [`u`](#binding-to-callbacks): define function arguments as uncurried (manual)
-- [`mel.int`](#using-polymorphic-variants-to-bind-to-enums): compile function
-  argument to an int
-- [`mel.string`](#using-polymorphic-variants-to-bind-to-enums): compile function
-  argument to a string
-- [`mel.this`](#modeling-this-based-callbacks): bind to `this` based callbacks
-- [`mel.uncurry`](#binding-to-callbacks): define function arguments as uncurried
-  (automated)
-- [`mel.unwrap`](#approach-2-polymorphic-variant-bsunwrap): unwrap variant
-  values
+- [`u`](#binding-to-callbacks): 関数の引数を uncurried として定義（手動）
+- [`mel.int`](#using-polymorphic-variants-to-bind-to-enums): 関数の引数を int にコンパイルする
+- [`mel.string`](#using-polymorphic-variants-to-bind-to-enums): 関数の引数を文字列にコンパイルする
+- [`mel.this`](#modeling-this-based-callbacks): `this` ベースのコールバックにバインドする
+- [`mel.uncurry`](#binding-to-callbacks): 関数の引数を uncurried として定義する(自動)
+- [`mel.unwrap`](#approach-2-polymorphic-variant-bsunwrap): Variant 値のアンラップ
 
-These attributes are used in places like records, fields, arguments, functions,
-and more:
+これらの attributes は、レコード、フィールド、引数、関数などの場所で使用されます：
 
-- `mel.as`: redefine the name generated in the JavaScript output code. Used in
-  [constant function arguments](#constant-values-as-arguments),
-  [variants](#conversion-functions), polymorphic variants (either [inlined in
-  external functions](#using-polymorphic-variants-to-bind-to-enums) or [in type
-  definitions](#polymorphic-variants)) and [record
-  fields](#objects-with-static-shape-record-like).
-- [`deriving`](#generate-getters-setters-and-constructors): generate getters and
-  setters for some types
-- [`mel.inline`](#inlining-constant-values): forcefully inline constant values
-- [`optional`](#generate-javascript-objects-with-optional-properties):
-  translates optional fields in a record to omitted properties in the generated
-  JavaScript object (combines with `deriving`)
+- `mel.as`: JavaScript の出力コードで生成される名前を再定義します。[定数関数の引数](#constant-values-as-arguments)、[Variants](#conversion-functions)、Polymorphic variants（[exteranl 関数のインライン化](#using-polymorphic-variants-to-bind-to-enums)または[型定義](#polymorphic-variants)）、[レコードフィールド](#objects-with-static-shape-record-like)で使用されます
+- [`deriving`](#generate-getters-setters-and-constructors): 型のゲッターとセッターを生成します
+- [`mel.inline`](#inlining-constant-values): 定数値を強制的にインライン化します
+- [`optional`](#generate-javascript-objects-with-optional-properties): レコードのフィールドを省略します（`deriving`と組み合わせる）
 
 **Extension nodes:**
 
-In order to use any of these extension nodes, you will have to add the melange
-PPX preprocessor to your project. To do so, add the following to the `dune`
-file:
+これらの拡張ノードを使用するには、melange PPX プリプロセッサをプロジェクトに追加する必要があります。そのためには、`dune` ファイルに以下を追加してください：
 
-```text
+```clojure
 (library
  (name lib)
  (modes melange)
@@ -729,23 +617,21 @@ file:
    (pps melange.ppx)))
 ```
 
-The same field `preprocess` can be added to `melange.emit`.
+同じフィールドの`preprocess`を`melange.emit`に追加することができる。
 
-Here is the list of all the extension nodes supported by Melange:
+以下は、Melange がサポートしているすべての Extension nodes のリストです：
 
-- [`mel.debugger`](#debugger): insert `debugger` statements
-- [`mel.external`](#detect-global-variables): read global values
-- [`mel.obj`](#using-jst-objects): create JavaScript object literals
-- [`mel.raw`](#generate-raw-javascript): write raw JavaScript code
-- [`mel.re`](#regular-expressions): insert regular expressions
+- [`mel.debugger`](#debugger): `debugger`文を挿入する
+- [`mel.external`](#detect-global-variables): グローバル値を読む
+- [`mel.obj`](#using-jst-objects): JavaScript オブジェクトリテラルを作成する
+- [`mel.raw`](#generate-raw-javascript): 生の JavaScript コードを書く
+- [`mel.re`](#regular-expressions):　正規表現を挿入する
 
 ## Generate raw JavaScript
 
-It is possible to directly write JavaScript code from a Melange file. This is
-unsafe, but it can be useful for prototyping or as an escape hatch.
+Melange ファイルから JavaScript コードを直接記述することは可能です。これは安全ではありませんが、プロトタイプを作成するときや、逃げ道として便利です。
 
-To do it, we will use the `mel.raw`
-[extension](https://v2.ocaml.org/manual/extensionnodes.html):
+これを行うには、[`mel.raw`拡張](https://v2.ocaml.org/manual/extensionnodes.html)を使用します：
 
 ```ocaml
 let add = [%mel.raw {|
@@ -753,7 +639,7 @@ let add = [%mel.raw {|
     console.log("hello from raw JavaScript!");
     return a + b;
   }
-|}]
+  |}]
 
 let () = Js.log (add 1 2)
 ```
@@ -765,23 +651,15 @@ let add = [%mel.raw
     console.log("hello from raw JavaScript!");
     return a + b;
   }
-|}
+  |}
 ];
 
 let () = Js.log(add(1, 2));
 ```
 
-The `{||}` strings are called ["quoted
-strings"](https://ocaml.org/manual/lex.html#quoted-string-id). They are similar
-to JavaScript’s template literals, in the sense that they are multi-line, and
-there is no need to escape characters inside the string.
+`{||}` 文字列は[引用符付き文字列](https://ocaml.org/manual/lex.html#quoted-string-id)と呼ばれます。これらは JavaScript のテンプレート・リテラルに似ており、複数行にまたがるという意味で、文字列の内部で文字をエスケープする必要はありません。
 
-Using <span class="text-ocaml">one percentage sign</span><span
-class="text-reasonml">the extension name between square brackets</span>
-(`[%mel.raw <string>]`) is useful to define expressions (function bodies, or
-other values) where the implementation is directly JavaScript. This is useful as
-we can attach the type signature already in the same line, to make our code
-safer. For example:
+角括弧で囲った Extension 名を使用すると (`[%mel.raw <string>]`) 、実装が直接 JavaScript である式 (関数本体やその他の値) を定義するのに便利です。これは、同じ行ですでに型シグネチャを付けることができるので便利で、コードをより安全にすることができます。例えば：
 
 ```ocaml
 let f : unit -> int = [%mel.raw "function() {return 1}"]
@@ -791,13 +669,9 @@ let f : unit -> int = [%mel.raw "function() {return 1}"]
 let f: unit => int = ([%mel.raw "function() {return 1}"]: unit => int);
 ```
 
-Using <span class="text-ocaml">two percentage signs (`[%%mel.raw
-<string>]`)</span><span class="text-reasonml">the extension name without square
-brackets (`%mel.raw <string>`)</span> is reserved for definitions in a
-[structure](https://v2.ocaml.org/manual/moduleexamples.html#s:module:structures)
-or [signature](https://v2.ocaml.org/manual/moduleexamples.html#s%3Asignature).
+角括弧のない Extension 名（`%mel.raw <string>`）は、[構造体](https://v2.ocaml.org/manual/moduleexamples.html#s:module:structures)や[シグネチャ](https://v2.ocaml.org/manual/moduleexamples.html#s%3Asignature)の定義に使われます。
 
-For example:
+例：
 
 ```ocaml
 [%%mel.raw "var a = 1"]
@@ -809,8 +683,7 @@ For example:
 
 ## Debugger
 
-Melange allows you to inject a `debugger;` expression using the `mel.debugger`
-extension:
+Melange では、`mel.debugger` Extension を使用して `debugger;` 式を注入することができます：
 
 ```ocaml
 let f x y =
@@ -825,7 +698,7 @@ let f = (x, y) => {
 };
 ```
 
-Output:
+出力：
 
 ```javascript
 function f(x, y) {
@@ -836,13 +709,11 @@ function f(x, y) {
 
 ## Detect global variables
 
-Melange provides a relatively type safe approach to use globals that might be
-defined either in the JavaScript runtime environment: `mel.external`.
+Melange は、JavaScript の実行環境で定義されたグローバルを使用するための比較的型安全なアプローチを提供しています： `mel.external`。
 
-`[%mel.external id]` will check if the JavaScript value `id` is `undefined` or
-not, and return an `Option.t` value accordingly.
+`[%mel.external id]`は JavaScript の値`id`が`undefined`かどうかをチェックし、それに応じて`Option.t`値を返します。
 
-For example:
+例：
 
 ```ocaml
 let () = match [%mel.external __DEV__] with
@@ -858,7 +729,7 @@ let () =
   };
 ```
 
-Another example:
+例：
 
 ```ocaml
 let () = match [%mel.external __filename] with
@@ -879,13 +750,15 @@ let () =
 Some JavaScript idioms require special constants to be inlined since they serve
 as de-facto directives for bundlers. A common example is `process.env.NODE_ENV`:
 
+JavaScript のイディオムの中には、インライン化するために特別な定数を必要とするものがあります。一般的な例は `process.env.NODE_ENV` です：
+
 ```js
 if (process.env.NODE_ENV !== 'production') {
   // Development-only code
 }
 ```
 
-becomes:
+このコードは以下のようになります:
 
 ```js
 if ('development' !== 'production') {
@@ -893,11 +766,9 @@ if ('development' !== 'production') {
 }
 ```
 
-In this case, bundlers such as Webpack can tell that the `if` statement always
-evaluates to a specific branch and eliminate the others.
+この場合、Webpack などのバンドラーは、`if`文が常に特定のブランチで評価されることを判別し、他のブランチを排除することができます。
 
-Melange provides the `mel.inline` attribute to achieve the same goal in
-generated JavaScript. Let’s look at an example:
+Melange は、生成された JavaScript で同じ目標を達成するために`mel.inline` attribute を提供します。例を見てみましょう：
 
 ```ocaml
 external node_env : string = "NODE_ENV" [@@mel.scope "process", "env"]
@@ -926,14 +797,12 @@ let () =
   };
 ```
 
-As we can see in the generated JavaScript presented below:
+以下に示す生成された JavaScript を見ればわかります：
 
-- the `development` variable is emitted
-  - it gets used as a variable `process.env.NODE_ENV !== development` in the
-    `if` statement
-- the `development_inline` variable isn’t present in the final output
-  - its value is inlined in the `if` statement: `process.env.NODE_ENV !==
-"development"`
+- `development` 変数がエミットされる
+  - 変数`process.env.NODE_ENV !== development`として`if`文で使用される
+- `development_inline`変数が最終出力に存在しない
+  - この値は`if`文内でインライン化される: `process.env.NODE_ENV !== "development"`
 
 ```js
 var development = 'development'
@@ -961,6 +830,15 @@ Melange separates the binding methods for JavaScript objects based on these four
 use cases. This section documents the first three. Binding to JavaScript module
 objects is described in the ["Using functions from other JavaScript
 modules"](#using-functions-from-other-javascript-modules) section.
+
+JavaScript のオブジェクトは、さまざまなユースケースで使用されます：
+
+- 固定の型の[レコード](<https://en.wikipedia.org/wiki/Record_(computer_science)>)
+- マップまたは辞書
+- クラス
+- インポート/エクスポートするモジュール
+
+Melange では、これら 4 つのユースケースに基づいて JavaScript オブジェクトのバインディングメソッドを分けています。このセクションでは、最初の 3 つについて説明します。JavaScript モジュールオブジェクトへのバインディングについては、[「他の JavaScript モジュールからの関数の使用」](#using-functions-from-other-javascript-modules)で説明します。
 
 <!-- TODO: mention scope here too? -->
 
