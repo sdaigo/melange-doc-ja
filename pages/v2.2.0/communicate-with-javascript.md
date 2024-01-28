@@ -818,19 +818,6 @@ if (process.env.NODE_ENV !== 'development') {
 
 ## Bind to JavaScript objects
 
-JavaScript objects are used in a variety of use cases:
-
-- As a fixed shape
-  [record](<https://en.wikipedia.org/wiki/Record_(computer_science)>).
-- As a map or dictionary.
-- As a class.
-- As a module to import/export.
-
-Melange separates the binding methods for JavaScript objects based on these four
-use cases. This section documents the first three. Binding to JavaScript module
-objects is described in the ["Using functions from other JavaScript
-modules"](#using-functions-from-other-javascript-modules) section.
-
 JavaScript のオブジェクトは、さまざまなユースケースで使用されます：
 
 - 固定の型の[レコード](<https://en.wikipedia.org/wiki/Record_(computer_science)>)
