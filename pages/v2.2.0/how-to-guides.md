@@ -1,3 +1,7 @@
+---
+title: 'How-to guides'
+---
+
 # How-to guides
 
 ## Migrate a ReScript library to Melange

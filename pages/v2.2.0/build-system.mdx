@@ -1,3 +1,7 @@
+---
+title: 'Build system'
+---
+
 import { Tabs } from 'nextra/components'
 
 # Build system
@@ -100,50 +104,50 @@ JavaScript コードを生成するには、アプリケーションのエント
 そして`app.ml`（Reason の場合は`app.re`）ファイルを作ります：
 
 <Tabs items={['OCaml(app.ml)', 'Reason(app.re)']}>
-<Tabs.Tab>
-```ocaml
-let () = Js.log Lib.name
-```
-</Tabs.Tab>
-<Tabs.Tab>
-```ocaml
-let () = Js.log(Lib.name);
-```
-</Tabs.Tab>
+  <Tabs.Tab>
+  ```ocaml
+  let () = Js.log Lib.name
+  ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+  ```ocaml
+  let () = Js.log(Lib.name);
+  ```
+  </Tabs.Tab>
 </Tabs>
 
 `melange.emit` スタンザは Dune にライブラリとモジュールのセットから JavaScript ファイルを生成するよう指示します。このスタンザに関する詳しいドキュメントは [Dune docs](https://dune.readthedocs.io/en/stable/melange.html#melange-emit) を参照してください。
 
 アプリのファイル構造は以下のようになります：
 
-<Tabs items={["OCaml", "Reason"]}>
-<Tabs.Tab>
-```bash
-├── _opam
-├── lib
-│   ├── dune
-│   └── lib.ml
-├── dune-project
-├── dune
-└── app.ml
-```
-</Tabs.Tab>
-<Tabs.Tab>
-```bash
-├── _opam
-├── lib
-│   ├── dune
-│   └── lib.re
-├── dune-project
-├── dune
-└── app.re
-```
-</Tabs.Tab>
+<Tabs items={['OCaml', 'Reason']}>
+  <Tabs.Tab>
+    ```bash
+    ├── _opam
+    ├── lib
+    │ ├── dune
+    │ └── lib.ml
+    ├── dune-project
+    ├── dune
+    └── app.ml
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    ├── _opam
+    ├── lib
+    │ ├── dune
+    │ └── lib.re
+    ├── dune-project
+    ├── dune
+    └── app.re
+    ```
+  </Tabs.Tab>
 </Tabs>
 
 #### ビルド
 
-Melangeコンパイラーを使用して、ソースからJavaScriptコードを生成します：
+Melange コンパイラーを使用して、ソースから JavaScript コードを生成します：
 
 ```bash
 dune build @melange
@@ -154,8 +158,8 @@ dune build @melange
 
 デフォルトでは、`melange.emit` stanza 内のすべてのターゲットと依存するライブラリが`melange`エイリアスにアタッチされます。後述するように、明示的にエイリアスを定義することもできます。
 
-すべてがうまくいけば、出来上がったJavaScriptをNode.jsで実行できるはずです。
-Duneの機能を説明したときに述べたように、Duneはすべての成果物を`_build`フォルダーの中に置き、ソース・フォルダーを汚さないようにしています。そのため、そのフォルダーに置かれたスクリプトをNodeに指し示し、期待される出力を確認します：
+すべてがうまくいけば、出来上がった JavaScript を Node.js で実行できるはずです。
+Dune の機能を説明したときに述べたように、Dune はすべての成果物を`_build`フォルダーの中に置き、ソース・フォルダーを汚さないようにしています。そのため、そのフォルダーに置かれたスクリプトを Node に指し示し、期待される出力を確認します：
 
 ```bash
 $ node _build/default/app/app.js
@@ -164,31 +168,31 @@ Jane
 
 #### JavaScript アーティファクトのレイアウト
 
-上のコマンドでは、`app`フォルダーの中にある`app.js`ファイルを探さなければなりませんでしたが、ソースにはそのようなフォルダーはありません。このフォルダは`melange.emit`stanzaの`target`フィールドで宣言されたもので、Duneは生成されたJavaScriptの成果物をどこに置くかを知るためにこれを使います。
+上のコマンドでは、`app`フォルダーの中にある`app.js`ファイルを探さなければなりませんでしたが、ソースにはそのようなフォルダーはありません。このフォルダは`melange.emit`stanza の`target`フィールドで宣言されたもので、Dune は生成された JavaScript の成果物をどこに置くかを知るためにこれを使います。
 
 より複雑な例として、以下のセットアップを考えてみましょう：
 
-<Tabs items={["OCaml", "Reason"]}>
-<Tabs.Tab>
-```bash
-├── dune-project
-├── lib
-│   ├── dune
-│   └── foo.ml
-└── emit
+<Tabs items={['OCaml', 'Reason']}>
+  <Tabs.Tab>
+    ```bash
+    ├── dune-project
+    ├── lib
+    │ ├── dune
+    │ └── foo.ml
+    └── emit
     └── dune
-```
-</Tabs.Tab>
-<Tabs.Tab>
-```bash
-├── dune-project
-├── lib
-│   ├── dune
-│   └── foo.re
-└── emit
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    ├── dune-project
+    ├── lib
+    │ ├── dune
+    │ └── foo.re
+    └── emit
     └── dune
-```
-</Tabs.Tab>
+    ```
+  </Tabs.Tab>
 </Tabs>
 
 `emit/dune`は以下のようになります：
@@ -207,7 +211,7 @@ Jane
  (modes melange))
 ```
 
-そして、`foo.ml`（`foo.re`）のJavaScriptの成果物は、以下に置かれます：
+そして、`foo.ml`（`foo.re`）の JavaScript の成果物は、以下に置かれます：
 
 ```bash
 _build/default/emit/app/lib/foo.js
@@ -219,7 +223,7 @@ _build/default/emit/app/lib/foo.js
 - `(target $target)` のように、`target` フィールド `$target` を含みます
 - 相対ワークスペース・パス `$path-to-source-file` に置かれた `$name.ml$name.ml`（`$name.ml$name.re`） というソース・ファイル
 
-`$name.ml`（`$name.re`）から生成されるJavaScriptファイルへのパスは以下のようになります：
+`$name.ml`（`$name.re`）から生成される JavaScript ファイルへのパスは以下のようになります：
 
 ```text
 _build/default/$melange-emit-folder/$target/$path-to-source-file/$name.js
@@ -230,7 +234,7 @@ _build/default/$melange-emit-folder/$target/$path-to-source-file/$name.js
 `melange.emit` に関する以下の推奨事項は、大規模な産業プロジェクトでテストされ、複雑さ、メンテナンス、構築パフォーマンスに対処するための有用なガイドラインであることが証明されています。
 
 - Webpack などのツールから生成された JavaScript ファイルにアクセスしやすくするため、`melange.emit` stanza を含む `dune` ファイルをプロジェクトのルートフォルダに置くことを推奨します。これにより、生成された JavaScript ファイルが `_build/default/$target` パスの下に直接置かれるようになります
-- バンドルサイズが不用意に大きくなるリスクを最小にするために、`melange.emit` stanza の数を最小にすることをお勧めします。複数の `melange.emit` stanza を持つと、同じライブラリから生成されたJavaScriptコードが複数コピーされる可能性があります。`melange.emit` stanza をまとめることで、この問題を軽減し、より効率的なバンドルサイズを確保することができます
+- バンドルサイズが不用意に大きくなるリスクを最小にするために、`melange.emit` stanza の数を最小にすることをお勧めします。複数の `melange.emit` stanza を持つと、同じライブラリから生成された JavaScript コードが複数コピーされる可能性があります。`melange.emit` stanza をまとめることで、この問題を軽減し、より効率的なバンドルサイズを確保することができます
 
 #### エイリアスを使う
 
@@ -281,7 +285,7 @@ Melange プロジェクトでアセットを扱う方法を学ぶために、テ
 
 次に `lib/dune` ファイルを適合させます。
 環境変数 `__dirname` の値を取得するために、`melange.runtime_deps` フィールドと
-`bs.raw` 拡張子（これらの拡張子については「JavaScriptとのコミュニケーション」のセクションで詳しく説明します）を
+`bs.raw` 拡張子（これらの拡張子については「JavaScript とのコミュニケーション」のセクションで詳しく説明します）を
 使用できるようにする [`processing`](https://dune.readthedocs.io/en/stable/reference/preprocessing-spec.html) フィールドを追加する必要があります：
 
 ```clojure
@@ -294,21 +298,21 @@ Melange プロジェクトでアセットを扱う方法を学ぶために、テ
 
 最後に `lib/lib.ml`（`lib/lib.re`） を更新し、最近追加されたファイルから読み込むようにします：
 
-<Tabs items={["OCaml", "Reason"]}>
-<Tabs.Tab>
-```ocaml
-let dir = [%mel.raw "__dirname"]
-let file = "name.txt"
-let name = Node.Fs.readFileSync (dir ^ "/" ^ file) `ascii
-```
-</Tabs.Tab>
-<Tabs.Tab>
-```ocaml
-let dir = [%mel.raw "__dirname"];
-let file = "name.txt";
-let name = Node.Fs.readFileSync(dir ++ "/" ++ file, `ascii);
-```
-</Tabs.Tab>
+<Tabs items={['OCaml', 'Reason']}>
+  <Tabs.Tab>
+    ```ocaml
+    let dir = [%mel.raw "__dirname"]
+    let file = "name.txt"
+    let name = Node.Fs.readFileSync (dir ^ "/" ^ file, `ascii);
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```ocaml
+    let dir = [%mel.raw "__dirname"];
+    let file = "name.txt";
+    let name = Node.Fs.readFileSync(dir ++ "/" ++ file, `ascii);
+    ```
+  </Tabs.Tab>
 </Tabs>
 
 これらの変更後、プロジェクトをビルドすると、Node でアプリケーション・ファイルを実行できるようになります：
@@ -319,7 +323,7 @@ $ node _build/default/app/app.js
 Jane
 ```
 
-同じ方法で、フォント、CSS、SVGファイル、その他プロジェクト内のあらゆるアセットをコピーすることができます。
+同じ方法で、フォント、CSS、SVG ファイル、その他プロジェクト内のあらゆるアセットをコピーすることができます。
 
 Dune は依存関係を非常に柔軟に指定できます。もうひとつの興味深い機能は globs で、複数のファイルに依存する場合の設定を簡略化できます。例えば：
 
@@ -333,7 +337,7 @@ Dune は依存関係を非常に柔軟に指定できます。もうひとつの
 詳しくは依存関係の仕様の[ドキュメント](https://dune.readthedocs.io/en/stable/concepts/dependency-spec.html)を参照してください。
 
 ランタイムの依存性については、Melange 開発者向けの Dune ガイドを終了しました。
-Dune の動作や Melange との統合についての詳細は、[Duneドキュメント](https://dune.readthedocs.io/)、[Melange opam template](https://github.com/melange-re/melange-opam-template)を参照してください。
+Dune の動作や Melange との統合についての詳細は、[Dune ドキュメント](https://dune.readthedocs.io/)、[Melange opam template](https://github.com/melange-re/melange-opam-template)を参照してください。
 
 #### CommonJS または ES6 modules
 

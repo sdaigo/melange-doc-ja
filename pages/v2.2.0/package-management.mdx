@@ -1,3 +1,7 @@
+---
+title: 'Package management'
+---
+
 import { Tabs } from 'nextra/components'
 
 # Package management
@@ -224,40 +228,40 @@ depends: [
 インストールされたパッケージのライブラリを使用するには、`dune` ファイルの `libraries` フィールドにライブラリ名を追加します。例えば、プロジェクトの構成が以下のようになっている場合：
 
 <Tabs items={['OCaml', 'Reason']}>
-<Tabs.Tab>
-```text
-project_name/
-├── _opam
-├── src
-│   ├── dune
-│   ├── ReactComponent1.ml
-│   ├── ReactComponent2.ml
-│   └── lib
-│        ├── dune
-│        └── data.ml
-├── dune-project
-├── dune
-├── package.json
-└── ...
-```
-</Tabs.Tab>
-<Tabs.Tab>
-```text
-project_name/
-├── _opam
-├── src
-│   ├── dune
-│   ├── ReactComponent1.re
-│   ├── ReactComponent2.re
-│   └── lib
-│        ├── dune
-│        └── data.re
-├── dune-project
-├── dune
-├── package.json
-└── ...
-```
-</Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    project_name/
+    ├── _opam
+    ├── src
+    │   ├── dune
+    │   ├── ReactComponent1.ml
+    │   ├── ReactComponent2.ml
+    │   └── lib
+    │        ├── dune
+    │        └── data.ml
+    ├── dune-project
+    ├── dune
+    ├── package.json
+    └── ...
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    project_name/
+    ├── _opam
+    ├── src
+    │   ├── dune
+    │   ├── ReactComponent1.re
+    │   ├── ReactComponent2.re
+    │   └── lib
+    │        ├── dune
+    │        └── data.re
+    ├── dune-project
+    ├── dune
+    ├── package.json
+    └── ...
+    ```
+  </Tabs.Tab>
 </Tabs>
 
 であれば、`reason-react`を`src`フォルダー下の`dune`ファイルに追加する必要があります：
@@ -272,7 +276,7 @@ project_name/
  (module_systems es6))
 ```
 
-一部のライブラリは、付属のPPXで処理された後でないと動作しません、例えば、`reason-react`は`reason-react-ppx`による前処理を必要とします。
+一部のライブラリは、付属の PPX で処理された後でないと動作しません、例えば、`reason-react`は`reason-react-ppx`による前処理を必要とします。
 これらの前処理は、同じパッケージの一部としてライブラリと一緒にインストールされることもあれば、
 別のパッケージの一部であることもあり、その場合は別々にインストールする必要があります。
 
@@ -280,8 +284,8 @@ project_name/
 
 まだ公開されていない opam パッケージは、`opam pin` コマンドでインストールできます。
 例えば、 `opam pin add melange-fetch.dev git+https://github.com/melange-community/melange-fetch`
-とすると、`melange-fetch` が Git リポジトリから取得され、あなたのswitchにインストールされます。
-そうすると、`<your-project>.opam` ファイルが2カ所更新されるはずです：
+とすると、`melange-fetch` が Git リポジトリから取得され、あなたの switch にインストールされます。
+そうすると、`<your-project>.opam` ファイルが 2 カ所更新されるはずです：
 
 ```text
 ...
@@ -296,7 +300,6 @@ pin-depends: [
 
 インストールが完了したら、パッケージに含まれているライブラリを `dune` ファイルに追加することができます：
 
-
 ```text
 (melange.emit
  (target output)
@@ -309,11 +312,11 @@ pin-depends: [
 
 ### npm packages
 
-Melange互換のパッケージはnpmに多数あります。
-npmには、`bs-json`のような、古いが今でも役に立つ互換性のあるBuckleScriptライブラリが多数あります。
+Melange 互換のパッケージは npm に多数あります。
+npm には、`bs-json`のような、古いが今でも役に立つ互換性のある BuckleScript ライブラリが多数あります。
 `npm install @glennsl/bs-json`を実行して依存関係をローカルに追加し、プロジェクトのルートにある`package.json`ファイルに記録します。
 
-Duneは新しくインストールされたパッケージを認識する必要があります。
+Dune は新しくインストールされたパッケージを認識する必要があります。
 このような場合、[`subdir`](https://dune.readthedocs.io/en/stable/dune-files.html#subdir) stanza が便利です：
 
 ```clojure
@@ -347,5 +350,5 @@ Dune が `node_modules` フォルダ下の新しい Melange ソースを処理�
 これは、Dune でラップされたライブラリは、そのライブラリにちなんだ名前の[トップレベルモジュールしか公開しない](https://dune.readthedocs.io/en/stable/explanation/ocaml-ecosystem.html#dune-is-opinionated)ため、
 ライブラリ名が有効なモジュール名でなければならないためです。このため、「`-`」のような文字を含むライブラリ名は無効です。
 
-この方法で、利用したいパッケージごとに新しい`subdir` stanzaを追加することができます。
+この方法で、利用したいパッケージごとに新しい`subdir` stanza を追加することができます。
 複数の npm パッケージを使用する大規模な例については、この [`dune` ファイル](https://github.com/psb/reason-react-hn-melange/blob/9983b26aebd78b445d5f44d66bb6781eccedc787/dune)を参照してください。

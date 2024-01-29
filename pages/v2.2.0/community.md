@@ -1,3 +1,7 @@
+---
+title: 'Community'
+---
+
 # Community
 
 コミュニティは以下のフォーラムに集まっています：

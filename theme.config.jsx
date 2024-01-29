@@ -3,12 +3,14 @@ import { useConfig } from 'nextra-theme-docs'
 export default {
   head: () => {
     const { frontMatter } = useConfig()
-    console.log(frontMatter.title)
     return (
       <>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta charSet="utf-8" />
-        <title>{frontMatter.title} Melange</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="OCaml for JavaScript developers" />
+        <title>
+          {frontMatter.title ? `${frontMatter.title} | Melange` : 'Melange'}
+        </title>
         <meta property="og:title" content="Melange doc Japanese" />
         <meta
           property="og:description"

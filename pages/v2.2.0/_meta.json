@@ -22,8 +22,9 @@
     "title": "TRY"
   },
 	"playground": {
-    "title": "Playground",
-    "href": "https://melange.re/v2.2.0/playground/"
+    "title": "Playground ↗",
+    "href": "https://melange.re/v2.2.0/playground/",
+		"newWindow": true
   },
 	"-- About": {
     "type": "separator",
