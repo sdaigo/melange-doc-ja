@@ -6,34 +6,26 @@ title: 'How-to guides'
 
 ## Migrate a ReScript library to Melange
 
-It is possible to use existing [ReScript](https://rescript-lang.org/) (formerly
-BuckleScript) code with Melange, mostly as is. However, as both projects evolve
-in different directions over time, it will become more challenging to do so as
-time goes by, as some of the most recent features of ReScript might not be
-directly convertible to make them work with Melange.
+既存の [ReScript](https://rescript-lang.org/)（旧 BuckleScript）のコードはほぼそのまま Melange で使用できます。ただし、両プロジェクトは異なる方向に進化しているため、ReScript の最新機能の一部は Melange で動作させるために直接変換することができないかもしれません。
 
-For this reason, the recommendation is to migrate libraries at a time where they
-were compatible with past versions of ReScript, for example v9 (or v10 at most).
+このため、ライブラリの移行は、ReScript の過去のバージョンと互換性のある時期、たとえば v9（または v10 まで）に行うことをお勧めします。
 
-These are the steps to follow:
+以下はその手順です：
 
-- Add an `opam` file
-- Add a `dune-project` file
-- Replace the `bsconfig.json` file with one or multiple `dune` files
-- (Optional) Migrate from ReScript syntax to Reason or OCaml syntaxes
-- Make sure everything works: `dune build`
-- Final step: remove `bsconfig.json` and adapt `package.json`
+- `opam`ファイルの追加
+- `dune-project` ファイルの追加
+- `bsconfig.json`ファイルを 1 つまたは複数の `dune` ファイルに置き換える
+- (オプション) ReScript 構文から Reason または OCaml 構文への移行
+- 全て動作するかを確認：`dune buile`
+- 最終ステップ: `bsconfig.json`を削除し、`package.json` にする
 
-Let's go through them in detail:
+詳しく見ていきましょう：
 
-### Add an `opam` file
+### `opam` ファイルを追加する
 
-To migrate your ReScript library to Melange, you will need some packages.
-Melange is designed to be used with [opam](https://opam.ocaml.org/), the package manager
-of OCaml, which is explained in [its own section](./package-management.md).
+ReScript ライブラリを Melange に移行するには、いくつかのパッケージが必要です。Melange は OCaml のパッケージマネージャである[`opam`](https://opam.ocaml.org/)と一緒に使うように設計されています。詳しくは[Package management](./package-management)を参照してください。
 
-To get started with the library migration, let's create an `opam` file in your
-library's root folder with the minimum set of packages to start working:
+ライブラリの移行を始めるために、ライブラリのルートフォルダに`opam`ファイルを作成し、最小限のパッケージ一式を入れてみましょう：
 
 ```text
 opam-version: "2.0"
@@ -52,27 +44,19 @@ depends: [
 dev-repo: "git+https://github.com/your/project.git"
 ```
 
-If your library was using [Reason syntax](https://reasonml.github.io/en/) (`re`
-files), you will need to add `"reason"` to the list of dependencies. If the
-library was using ReScript syntax (`res` files), you will need to add
-`rescript-syntax` to the list of dependencies. You can read more about how to
-migrate from ReScript syntax in the section below.
+ライブラリが[Reason 構文](https://reasonml.github.io/en/)（`re`ファイル）を使用している場合、依存関係のリストに `"reason"` を追加する必要があります。ライブラリが ReScript 構文（`res`ファイル）を使用している場合は、依存関係のリストに`rescript-syntax`を追加する必要があります。ReScript 構文からの移行方法については、以下のセクションを参照してください。
 
-At this point, we can create a [local opam
-switch](https://opam.ocaml.org/blog/opam-local-switches/) to start working on
-our library:
+この時点で、[ローカルの opam switch](https://opam.ocaml.org/blog/opam-local-switches/)を作成して、ライブラリの移行作業を開始できます：
 
 ```bash
 opam switch create . 5.1.1 -y --deps-only
 ```
 
-Once this step is done, we can call `dune` from the library folder, but first we
-need some configuration files.
+このステップが終わると、`library` フォルダーから`dune`を呼び出すことができますが、その前にいくつかの設定ファイルが必要です。
 
-### Add a `dune-project` file
+### `dune-project` ファイルの追加
 
-Create a file named `dune-project` in the library root folder. This file will
-tell Dune a few things about our project configuration:
+ライブラリのルートフォルダに `dune-project` という名前のファイルを作成します。このファイルはプロジェクトの設定について Dune にいくつかのことを伝えます：
 
 ```text
 (lang dune 3.8)
@@ -80,11 +64,9 @@ tell Dune a few things about our project configuration:
 (using melange 0.1)
 ```
 
-### Replace the `bsconfig.json` file with one or multiple `dune` files
+### `bsconfig.json`ファイルを 1 つまたは複数の `dune` ファイルに置き換える
 
-Now, we need to add a `dune` file where we will tell Dune about our library. You
-can put this new file next to the library sources, it will look something like
-this:
+ここで、Dune にライブラリのことを知らせる`dune`ファイルを追加します。この新しいファイルをライブラリのソースの隣に置くと、次のようになります：
 
 ```text
 (library
@@ -93,25 +75,13 @@ this:
  (preprocess (pps melange.ppx)))
 ```
 
-Let's see how the most common configurations in `bsconfig.json` (or
-`rescript.json`) map to `dune` files. You can find more information about these
-configurations in the [Rescript
-docs](https://rescript-lang.org/docs/manual/latest/build-configuration) and in
-the [Dune docs](https://dune.readthedocs.io/en/stable/dune-files.html#library).
+`bsconfig.json` (または `rescript.json`) にある最も一般的な設定が、どのように `dune` ファイルにマッピングされるかを見てみましょう。これらの設定についての詳細は、[Rescript のドキュメント](https://rescript-lang.org/docs/manual/latest/build-configuration)や [Dune のドキュメント](https://dune.readthedocs.io/en/stable/dune-files.html#library)を参照してください。
 
 #### `name`, `namespace`
 
-These two configurations map to Dune `(wrapped <boolean>)` field in the
-`library` stanza. By default, all Dune libraries are wrapped, which means that a
-single module with the name of the library is exposed at the top level. So e.g.
-of your `bsconfig.json` had `"namespace": false`, you can add `(wrapped false)`
-to your library, although wrapped libraries are heavily encouraged to avoid
-global namespace pollution.
+これら 2 つの設定は `library` stanza の Dune `(wrapped <boolean>)` フィールドに対応します。デフォルトでは、すべての Dune ライブラリはラップされ、ライブラリ名を持つ単一のモジュールがトップレベルで公開されます。そのため、例えば `bsconfig.json` に `"namespace": false` と記述されていた場合、ライブラリに `(wrapped false)` を追加します。
 
-It's important to note that the permissible character range for naming
-conventions differs between ReScript namespaces and Dune libraries. Dune library
-names must adhere to the naming criteria set for OCaml modules. For instance, if
-your `bsconfig.json` configuration includes a naming scheme like this:
+注意すべき点として、ReScript の名前空間と Dune ライブラリでは、命名規則に許容される文字の範囲が異なります。Dune ライブラリ名は、OCaml モジュールに設定されている命名基準に従わなければなりません。例えば、`bsconfig.json` 設定に次のような命名スキームが含まれている場合：
 
 ```json
 {
@@ -119,7 +89,7 @@ your `bsconfig.json` configuration includes a naming scheme like this:
 }
 ```
 
-It should be converted into something like:
+以下のように変換する必要があります：
 
 ```text
 (library
@@ -130,24 +100,17 @@ It should be converted into something like:
 
 #### `sources`
 
-Dune works slightly differently than ReScript when it comes down to including
-source folders as part of a library.
+Dune は、ライブラリの一部としてソースフォルダを含めることになると、ReScript とは若干異なる動作をします。
 
-By default, when Dune finds a `dune` file with a `library` stanza, it will
-include just the files inside that folder to the library itself (unless the
-`modules` field is used). If you want to create a library with multiple
-subfolders in it, you can use the following combination of stanzas:
+デフォルトでは、Dune は`library` stanza を持つ `dune` ファイルを見つけると、そのフォルダ内のファイルだけをライブラリに含めます（`modules`フィールドが使用されている場合を除く）。複数のサブフォルダーを含むライブラリを作成したい場合は、次のようなスタンザの組み合わせを使用します：
 
 - `(include_subdirs unqualified)`
-  ([docs](https://dune.readthedocs.io/en/stable/dune-files.html#include-subdirs)):
-  This stanza tells Dune to look for sources in all the subfolders of the folder
-  where the `dune` file lives.
+  ([ドキュメント](https://dune.readthedocs.io/en/stable/dune-files.html#include-subdirs)):
+  この stanza は、dune ファイルが存在するフォルダーのすべてのサブフォルダーにあるソースを探すように Dune に指示します
 - `(dirs foo bar)`
-  ([docs](https://dune.readthedocs.io/en/stable/dune-files.html#dirs)): This
-  stanza tells Dune to only look into `foo` and `bar` subdirectories of the
-  current folder.
+  ([ドキュメント](https://dune.readthedocs.io/en/stable/dune-files.html#dirs)): この stanza は、現在のフォルダーの `foo` と `bar` のサブディレクトリーだけを調べるように Dune に指示します
 
-So for example, if your library had this configuration in its `bsconfig.json`:
+例えば、ライブラリの`bsconfig.json`に次のような設定があったとします：
 
 ```json
 {
@@ -155,7 +118,7 @@ So for example, if your library had this configuration in its `bsconfig.json`:
 }
 ```
 
-You might translate this to a `dune` file with the following configuration:
+これを次のような構成の`dune`ファイルに変換します：
 
 ```text
 (include_subdirs unqualified)
@@ -166,22 +129,15 @@ You might translate this to a `dune` file with the following configuration:
  (preprocess (pps melange.ppx)))
 ```
 
-Alternatively, depending on the case, you could place two separate `dune` files,
-one in `src` and one in `helper`, and define one `library` on each. In that
-case, `include_subdirs` and `dirs` would not be necessary.
+また、場合によっては、`src`と`helper`にそれぞれ別の`dune`ファイルを置き、それぞれに 1 つのライブラリを定義することもできます。その場合、`include_subdirs`と`dirs`は必要ありません。
 
-Regarding the `"type" : "dev"` configuration in ReScript, the way Dune solves
-that is with public and private libraries. If a `library` stanza includes a
-`public_name` field, it becomes a public library, and will be installed.
-Otherwise it is private and won't be visible by consumers of the package.
+ReScript の `"type" : "dev"`の設定は、Dune ではパブリックライブラリとプライベートライブラリで解決します。`library` stanza に`public_name`フィールドが含まれていれば、パブリックライブラリになり、インストールされます。そうでない場合はプライベートとなり、パッケージのコンシューマーからは見えなくなります。
 
 #### `bs-dependencies`
 
-Your library might depend on other libraries. To specify dependencies of the
-library in the `dune` file, you can use the `libraries` field of the `library`
-stanza.
+ライブラリは他のライブラリに依存している場合があります。`dune`ファイルでライブラリの依存関係を指定するには、`library`stanza の `libraries` フィールドを使用します。
 
-For example, if `bsconfig.json` had something like this:
+たとえば、`bsconfig.json` に次のような記述があったとします：
 
 ```json
 "bs-dependencies": [
@@ -189,7 +145,7 @@ For example, if `bsconfig.json` had something like this:
 ]
 ```
 
-Your `dune` file will look something like:
+`dune`ファイルは以下のようになります：
 
 ```text
 (library
@@ -199,16 +155,13 @@ Your `dune` file will look something like:
  (preprocess (pps melange.ppx)))
 ```
 
-Remember that you will have to add all dependencies to your library `opam`
-package as well.
+ライブラリの`opam`パッケージにもすべての依存関係を追加しなければならないことを忘れないください。
 
 #### `bs-dev-dependencies`
 
-Most of the times, `bs-dev-dependencies` is used to define dependencies required
-for testing. For this scenario, opam provides the `with-test` variable.
+ほとんどの場合、テストに必要な依存関係を定義するために `bs-dev-dependencies` が使用されます。このシナリオのために、opam は `with-test` 変数を提供しています。
 
-Supposing we want to add `melange-jest` as a dependency to use for tests, you
-could add this in your library `opam` file:
+テストに使用する依存関係として`melange-jest`を追加したいとすると、ライブラリの`opam`ファイルに以下を追加します：
 
 ```text
 depends: [
@@ -216,35 +169,23 @@ depends: [
 ]
 ```
 
-The packages marked with this variable [become
-dependencies](https://opam.ocaml.org/doc/Manual.html#opamfield-depends) when
-`opam install` is called with the `--with-test` flag.
+この変数でマークされたパッケージは、`--with-test` フラグ付きで `opam install` が呼ばれたときに依存関係になります。
 
-Once the library `melange-jest` has been installed by opam, it is available in
-Dune, so adding `(libraries melange-jest)` to your `library` or `melange.emit`
-stanzas would be enough to start using it.
+ライブラリ`melange-jest`が opam によってインストールされると、Dune で利用できるようになるので、`(libraries melange-jest)`を`libraries`や`melange.emit`stanza に追加するだけで使い始めることができます。
 
 #### `pinned-dependencies`
 
-Dune allows to work inside monorepos naturally, so there is no need for pinned
-dependencies.
-[Packages](https://dune.readthedocs.io/en/stable/reference/packages.html) can be
-defined in the `dune-project` file using the `packages` stanza, and multiple
-`dune-project` files can be added across a single codebase to work in a monorepo
-setup.
+Dune では monorepo で自然に作業することができるので、依存関係を固定する必要はありません。[パッケージ](<(https://dune.readthedocs.io/en/stable/reference/packages.html)>)は `packages`stanza を使って `dune-project`ファイルで定義することができ、複数の `dune-project` ファイルをひとつのコードベースに追加して monorepo をセットアップして動作させることができます。
 
 #### `external-stdlib`
 
-There is no direct mapping of this functionality in Melange. If you are
-interested in it, or have a use case for it, please share with us on [issue
-melange-re/melange#620](https://github.com/melange-re/melange/issues/620).
+Melange ではこの機能を直接マッピングすることはできません。この機能に興味がある、または使用例がある場合は、[issue melange-re/melange#620](https://github.com/melange-re/melange/issues/620)で共有してください。
 
 #### `js-post-build`
 
-You can use Dune rules to perform actions, that produce some targets, given some
-dependencies.
+Dune のルールを使って、いくつかの依存関係がある場合に、いくつかのターゲットを生成するアクションを実行することができます。
 
-For example, if you had something like this in `bsconfig.json`:
+例えば、`bsconfig.json`に以下のような記述があったとします：
 
 ```json
 {
@@ -254,7 +195,7 @@ For example, if you had something like this in `bsconfig.json`:
 }
 ```
 
-This could be expressed in a `dune` file with something like:
+これを`dune`ファイルで表現すると、次のようになります：
 
 ```text
 (rule
@@ -263,38 +204,25 @@ This could be expressed in a `dune` file with something like:
 )
 ```
 
-To read more about Dune rules, check [the
-documentation](https://dune.readthedocs.io/en/stable/dune-files.html#rule).
+Dune のルールについて詳しくは、[ドキュメント](https://dune.readthedocs.io/en/stable/dune-files.html#rule)をご覧ください。
 
 #### `package-specs`
 
-This setting is not configured at the library level, but rather at the
-application level, using the `module_systems` field in the `melange.emit`
-stanza. To read more about it, check the corresponding [build
-system](./build-system.md#commonjs-or-es6-modules) section.
+この設定はライブラリレベルではなく、アプリケーションレベルで、`melange.emit`stanza の`module_systems`フィールドを使って行います。詳しくは[Build system](./build-system)のセクションを参照してください。
 
-Regarding the `"in-source"` configuration, the corresponding field in Dune would
-be the `(promote (until-clean))` configuration, which can be added to a
-`melange.emit` stanza. You can read more about it in [the Dune
-documentation](https://dune.readthedocs.io/en/stable/dune-files.html#promote).
+`"in-source"` 設定に関しては、Dune で対応するフィールドは`(promote (until-clean))`設定です。`melange.emit` stanza に追加することができます。詳しくは[Dune のドキュメント](https://dune.readthedocs.io/en/stable/dune-files.html#promote)をご覧ください。
 
 #### `suffix`
 
-Same as with `package-specs` this configuration is set at the application level,
-using the `module_systems` field in the `melange.emit` stanza. Check the
-[CommonJS or ES6 modules](./build-system.md#commonjs-or-es6-modules) section to
-learn more about it.
+`package-specs`と同様、`melange.emit` stanza の`module_system`フィールドでアプリケーションレベルで設定します。[CommonJS や ES6 モジュール](./build-system#commonjs-or-es6-modules)のセクションを参照してください。
 
-#### `warnings` and `bsc-flags`
+#### `warnings` と `bsc-flags`
 
-You can use the [`flags`
-field](https://dune.readthedocs.io/en/stable/concepts/ocaml-flags.html) of the
-`library` stanza to define flags to pass to Melange compiler.
+`library` stanza の[`flags`フィールド](https://dune.readthedocs.io/en/stable/concepts/ocaml-flags.html)を使用して、Melange コンパイラに渡すフラグを定義できます。
 
-If you want to define flags only for Melange, you can use
-`melange.compile_flags`.
+Melange のみにフラグを定義したい場合は、`melange.compile_flags`を使用します。
 
-For example, if you had a `bsconfig.json` configuration like this:
+例えば、次のような`bsconfig.json`設定がある場合：
 
 ```json
 {
@@ -305,7 +233,7 @@ For example, if you had a `bsconfig.json` configuration like this:
 }
 ```
 
-You can define a similar configuration in your library `dune` file like this:
+同様の設定をライブラリの`dune`ファイルに次のように定義できます：
 
 ```text
 (library
@@ -315,9 +243,9 @@ You can define a similar configuration in your library `dune` file like this:
  (melange.compile_flags :standard -w +5-44-102))
 ```
 
-The same applies to `bsc-flags`.
+`bsc-flags` も同様です。
 
-### (Optional) Migrate from ReScript syntax to Reason or OCaml syntax
+### (オプション) ReScript 構文から Reason または OCaml 構文への移行
 
 The package `rescript-syntax` allows to translate `res` source files to `ml`.
 
