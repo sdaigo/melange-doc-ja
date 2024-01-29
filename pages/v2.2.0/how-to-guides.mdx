@@ -2,6 +2,8 @@
 title: 'How-to guides'
 ---
 
+import {Steps} from 'nextra/components'
+
 # How-to guides
 
 ## Migrate a ReScript library to Melange
@@ -21,6 +23,7 @@ title: 'How-to guides'
 
 詳しく見ていきましょう：
 
+<Steps>
 ### `opam` ファイルを追加する
 
 ReScript ライブラリを Melange に移行するには、いくつかのパッケージが必要です。Melange は OCaml のパッケージマネージャである[`opam`](https://opam.ocaml.org/)と一緒に使うように設計されています。詳しくは[Package management](./package-management)を参照してください。
@@ -68,7 +71,7 @@ opam switch create . 5.1.1 -y --deps-only
 
 ここで、Dune にライブラリのことを知らせる`dune`ファイルを追加します。この新しいファイルをライブラリのソースの隣に置くと、次のようになります：
 
-```text
+```clojure
 (library
  (name things)
  (modes melange)
@@ -91,7 +94,7 @@ opam switch create . 5.1.1 -y --deps-only
 
 以下のように変換する必要があります：
 
-```text
+```clojure
 (library
  (name fooBar) # or (name foo_bar)
  (modes melange)
@@ -120,7 +123,7 @@ Dune は、ライブラリの一部としてソースフォルダを含めるこ
 
 これを次のような構成の`dune`ファイルに変換します：
 
-```text
+```clojure
 (include_subdirs unqualified)
 (dirs src helper)
 (library
@@ -147,7 +150,7 @@ ReScript の `"type" : "dev"`の設定は、Dune ではパブリックライブ�
 
 `dune`ファイルは以下のようになります：
 
-```text
+```clojure
 (library
  (name things)
  (libraries reason-react)
@@ -208,13 +211,13 @@ Dune のルールについて詳しくは、[ドキュメント](https://dune.re
 
 #### `package-specs`
 
-この設定はライブラリレベルではなく、アプリケーションレベルで、`melange.emit`stanza の`module_systems`フィールドを使って行います。詳しくは[Build system](./build-system)のセクションを参照してください。
+この設定はライブラリレベルではなく、アプリケーションレベルで、`melange.emit`stanza の`module_systems`フィールドを使って行います。詳しくは[Build system](./build-system.mdx)のセクションを参照してください。
 
 `"in-source"` 設定に関しては、Dune で対応するフィールドは`(promote (until-clean))`設定です。`melange.emit` stanza に追加することができます。詳しくは[Dune のドキュメント](https://dune.readthedocs.io/en/stable/dune-files.html#promote)をご覧ください。
 
 #### `suffix`
 
-`package-specs`と同様、`melange.emit` stanza の`module_system`フィールドでアプリケーションレベルで設定します。[CommonJS や ES6 モジュール](./build-system#commonjs-or-es6-modules)のセクションを参照してください。
+`package-specs`と同様、`melange.emit` stanza の`module_system`フィールドでアプリケーションレベルで設定します。[CommonJS や ES6 モジュール](./build-system.mdx#commonjs-または-es6-modules)のセクションを参照してください。
 
 #### `warnings` と `bsc-flags`
 
@@ -235,7 +238,7 @@ Melange のみにフラグを定義したい場合は、`melange.compile_flags`�
 
 同様の設定をライブラリの`dune`ファイルに次のように定義できます：
 
-```text
+```clojure
 (library
  (name things)
  (modes melange)
@@ -293,10 +296,11 @@ running
 dune build
 ```
 
-Throughout the process, you might run into some errors, these are the most
-common ones:
+</Steps>
 
-#### Warning 16 [unerasable-opt-argument] is triggered more often than before
+Throughout the process, you might run into some errors, these are the most common ones:
+
+#### Warning 16 \[unerasable-opt-argument\] is triggered more often than before
 
 Melange triggers `Warning 16: this optional argument cannot be erased` more
 often than before, as the type system in OCaml 4.12 was improved. You can read
@@ -305,7 +309,7 @@ more about this in this [OCaml PR](https://github.com/ocaml/ocaml/pull/9783).
 **Fix**: either add `()` as final param of the function, or replace one labelled
 arg with a positional one.
 
-#### Warning 69 [unused-field] triggered from bindings types
+#### Warning 69 \[unused-field\] triggered from bindings types
 
 Sometimes, types for bindings will trigger `Warning 69 [unused-field]: record
 field foo is never read.` errors.
@@ -345,7 +349,7 @@ external myImage : string = "default" [@@bs.module "./icons/overview.svg"]
 **Fix**: You can include it by using the `melange.runtime_deps` field of the
 library:
 
-```text
+```clojure
 (library
  (name things)
  (modes melange)
@@ -353,8 +357,7 @@ library:
  (melange.runtime_deps icons/overview.svg))
 ```
 
-You can read more about this in the [Handling
-assets](./build-system.md#handling-assets) section.
+You can read more about this in the [Handling assets](./build-system.mdx#アセットを扱う) section.
 
 ### Final step: remove `bsconfig.json` and adapt `package.json`
 
@@ -411,7 +414,7 @@ If you get errors of the kind `Unused attribute`, or type errors in externals
 that don't make much sense, then you probably need to add `melange.ppx` to your
 `library` or ` melange.emit` stanzas.
 
-```
+```clojure
 (library
  ...
  (preprocess

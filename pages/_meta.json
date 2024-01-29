@@ -1,8 +1,8 @@
 {
-	"playground": {
-		"type": "page",
-		"title": "Playground ↗",
-		"href": "https://melange.re/v2.2.0/playground/",
-		"newWindow": true
-	}
+  "playground-menu": {
+    "type": "page",
+    "title": "Playground ↗",
+    "href": "https://melange.re/v2.2.0/playground/",
+    "newWindow": true
+  }
 }
