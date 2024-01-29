@@ -11,7 +11,7 @@ export default {
         <title>
           {frontMatter.title ? `${frontMatter.title} | Melange` : 'Melange'}
         </title>
-        <meta property="og:title" content="Melange doc Japanese" />
+        <meta property="og:title" content="OCaml for JavaScript developers" />
         <meta
           property="og:description"
           content="OCaml for JavaScript developers"
